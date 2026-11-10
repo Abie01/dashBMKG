@@ -57,7 +57,7 @@ def _h(key, expr):
 
 _CSS = """
 <style>
-:root{--hdr:56px; --flt:68px; --kpi:80px; --ftr:32px; --gap:8px;
+:root{--hdr:56px; --flt:80px; --kpi:80px; --ftr:32px; --gap:8px;
   --M:max(440px, calc(100vh - var(--hdr) - var(--flt) - var(--kpi) - var(--ftr) - 5*var(--gap) - 8px));
   --A:calc(var(--M) - 52px); --Tt:calc(var(--A)*.555); --Tb:calc(var(--A)*.445);}
 header[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], footer, #MainMenu {display:none !important;}
@@ -184,7 +184,7 @@ if D["nsk"] is not None and len(D["nsk"]):
     _n["tanggal"] = pd.to_datetime(_n["tanggal"])
     _n = _n.sort_values("tanggal")
     _sk = str(_n["skenario"].iloc[0]) if "skenario" in _n.columns else "plume IRI"
-    NINO_TXT = f"skenario {_sk}"
+    NINO_TXT = f"IRI {fmt(_n['nino34'].iloc[0])} → {fmt(_n['nino34'].iloc[-1])}"
     NINO_NOTE = f"skenario Niño 3.4 dari plume IRI/CCSR ({_sk}), bukan nilai tetap"
 else:
     NINO_TXT = f"asumsi {fmt(NINO_ASUMSI)} (tetap)"
@@ -597,7 +597,7 @@ cards = [
      f'{mon_label(f0["d"])} · {"▲" if f0["a"] > last["anomali"] else "▼"} dari anomali terakhir · 12 bln {fmt(f_nat["a"].mean(), 2, True)}'),
     ("", "Model terbaik (RMSE)", f'{fmt(best["RMSE"], 3)} <small>°C</small>',
      f'{best["pendekatan"]} · {str(best["model"]).replace("HistGradientBoosting", "HGB")} · Δ ke #2: {fmt(second["RMSE"] - best["RMSE"], 3)}'),
-    ("acc", "Niño 3.4 dan fase ENSO", f'{fmt(nn["nino34"])} <small>°C · {nn["fase"]}</small>', f'{mon_label(nn["tanggal"])} · forecast: {NINO_TXT}'),
+    ("acc", "Niño 3.4 terakhir dan fase", f'{fmt(nn["nino34"])} <small>°C · {nn["fase"]}</small>', f'{mon_label(nn["tanggal"])} (obs.) · forecast {NINO_TXT}'),
 ]
 st.markdown('<div class="kpis">' + "".join(f'<div class="kpi {c}"><div class="l">{l}</div><div class="v">{v}</div><div class="s">{s}</div></div>' for c, l, v, s in cards) + "</div>",
             unsafe_allow_html=True)
