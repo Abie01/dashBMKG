@@ -212,8 +212,8 @@ def reset_all():
 
 
 # ------------------------------------------------------------------ header (identitas bisa diubah di sini)
-NAMA_SAYA = "Nama Anda"
-UNIT_SAYA = "Magang BMKG · IPB"
+NAMA_SAYA = "Abie Septian Wibowo"
+UNIT_SAYA = "G1401231069"
 
 
 def _logo(fn, txt):
