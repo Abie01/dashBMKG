@@ -163,7 +163,7 @@ def load(folder):
     D = dict(obs=rd("t2m_bulanan", ["tanggal"]), fc=rd("forecast", ["tanggal_target"]), met=rd("metrik"),
              imp=rd("importance"), nino=rd("nino34", ["tanggal"]))
     D["imp"]["model"] = D["imp"]["model"].astype(str).str.replace(r"\s*tuned\s*", "", regex=True).str.strip()
-    for n, k in (("ringkasan_anomali", "ring"), ("normal_bulanan", "norm")):
+    for n, k in (("ringkasan_anomali", "ring"), ("normal_bulanan", "norm"), ("nino34_skenario", "nsk")):
         p = os.path.join(folder, n + ".csv")
         D[k] = pd.read_csv(p, encoding="utf-8-sig") if os.path.exists(p) else None
     gp = os.path.join(folder, "provinsi_jawa.geojson")
@@ -178,6 +178,17 @@ except FileNotFoundError as e:
     st.stop()
 
 obs, fc_all, met, imp, nino = D["obs"], D["fc"], D["met"], D["imp"], D["nino"]
+# skenario Niño 3.4 untuk forecast (opsional: nino34_skenario.csv berisi tanggal, nino34, skenario)
+if D["nsk"] is not None and len(D["nsk"]):
+    _n = D["nsk"].copy()
+    _n["tanggal"] = pd.to_datetime(_n["tanggal"])
+    _n = _n.sort_values("tanggal")
+    _sk = str(_n["skenario"].iloc[0]) if "skenario" in _n.columns else "plume IRI"
+    NINO_TXT = f"skenario {_sk}"
+    NINO_NOTE = f"skenario Niño 3.4 dari plume IRI/CCSR ({_sk}), bukan nilai tetap"
+else:
+    NINO_TXT = f"asumsi {fmt(NINO_ASUMSI)} (tetap)"
+    NINO_NOTE = f"asumsi Niño 3.4 = {fmt(NINO_ASUMSI)} (tetap)"
 PROVS = sorted(obs["provinsi"].unique())
 norm_period = str(D["norm"]["periode_normal"].iloc[0]).replace("-", "–") if D["norm"] is not None else "1995–2024"
 level = int(fc_all["level_interval_%"].iloc[0]) if "level_interval_%" in fc_all.columns else 95
@@ -212,8 +223,8 @@ def reset_all():
 
 
 # ------------------------------------------------------------------ header (identitas bisa diubah di sini)
-NAMA_SAYA = "Abie Septian Wibowo"
-UNIT_SAYA = "G1401231069"
+NAMA_SAYA = "Nama Anda"
+UNIT_SAYA = "Magang BMKG · IPB"
 
 
 def _logo(fn, txt):
@@ -245,7 +256,7 @@ with c6.popover("ⓘ Catatan", use_container_width=True):
     st.markdown(
         f"""**Catatan metode dan batasan**
 - **Sumber dan periode.** ERA5 dan indeks Niño 3.4, 6 provinsi di Pulau Jawa. Observasi {mon_label(first_obs)} – {mon_label(last_obs)}; normal klimatologis {norm_period}; forecast {mon_label(fc_start)} – {mon_label(fc_end)}, 1 bulan ke depan (input bulan t, target t+1).
-- **Forecast.** Eksperimental dan bersyarat pada asumsi Niño 3.4 = {fmt(NINO_ASUMSI)} dengan variabel pendukung klimatologis. Bukan skenario ENSO dinamis dan bukan produk operasional BMKG.
+- **Forecast.** Eksperimental dan bersyarat pada {NINO_NOTE}, dengan variabel pendukung klimatologis. Bukan prediksi ENSO sendiri dan bukan produk operasional BMKG.
 - **Interval {level}%.** Kuantil empiris dari 12 residual uji, lebarnya konstan, kemungkinan terlalu sempit. Pada "Semua Provinsi" interval adalah rata-rata batas antarprovinsi (aproksimasi).
 - **Anomali.** Suhu observasi/prediksi dikurangi normal bulanan ({norm_period}). Berbeda dari error prediksi (prediksi − aktual).
 - **KPI nasional.** Rata-rata tak berbobot 6 provinsi di Pulau Jawa, bukan seluruh Indonesia.
@@ -586,7 +597,7 @@ cards = [
      f'{mon_label(f0["d"])} · {"▲" if f0["a"] > last["anomali"] else "▼"} dari anomali terakhir · 12 bln {fmt(f_nat["a"].mean(), 2, True)}'),
     ("", "Model terbaik (RMSE)", f'{fmt(best["RMSE"], 3)} <small>°C</small>',
      f'{best["pendekatan"]} · {str(best["model"]).replace("HistGradientBoosting", "HGB")} · Δ ke #2: {fmt(second["RMSE"] - best["RMSE"], 3)}'),
-    ("acc", "Niño 3.4 dan fase ENSO", f'{fmt(nn["nino34"])} <small>°C · {nn["fase"]}</small>', f'{mon_label(nn["tanggal"])} · asumsi forecast: {fmt(NINO_ASUMSI)} (tetap)'),
+    ("acc", "Niño 3.4 dan fase ENSO", f'{fmt(nn["nino34"])} <small>°C · {nn["fase"]}</small>', f'{mon_label(nn["tanggal"])} · forecast: {NINO_TXT}'),
 ]
 st.markdown('<div class="kpis">' + "".join(f'<div class="kpi {c}"><div class="l">{l}</div><div class="v">{v}</div><div class="s">{s}</div></div>' for c, l, v, s in cards) + "</div>",
             unsafe_allow_html=True)
@@ -675,6 +686,6 @@ with st.container(key="main"):
 # ------------------------------------------------------------------ footer
 st.markdown(
     f'<div class="foot"><div>Info data <span class="pill"><span class="dot"></span>Data terakhir: {mon_label(last_obs)} · Forecast s.d. {mon_label(fc_end)}</span></div>'
-    f'<div><b>ERA5</b> · Normal {norm_period} · <span class="w">Eksperimental, bersyarat Niño 3.4 = {fmt(NINO_ASUMSI)}; bukan produk operasional BMKG</span> · Detail di tombol ⓘ Catatan</div></div>',
+    f'<div><b>ERA5</b> · Normal {norm_period} · <span class="w">Eksperimental, bersyarat {NINO_NOTE}; bukan produk operasional BMKG</span> · Detail di tombol ⓘ Catatan</div></div>',
     unsafe_allow_html=True,
 )
