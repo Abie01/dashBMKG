@@ -37,6 +37,10 @@ GLOSS = {
 }
 
 
+GLOSS["Niño34"] = ("Niño 3.4 bulan target adalah skenario dari plume IRI/CCSR, bukan observasi. Indeks konvensional "
+                   "(basis 1991–2020) lebih tinggi daripada indeks relatif; samakan definisinya dengan data latih.")
+
+
 def tip(txt, key=None):
     return f'<span class="tp" title="{GLOSS.get(key or txt, "").replace(chr(34), chr(39))}">{txt}</span>'
 
@@ -106,9 +110,9 @@ def _h(key, expr):
 _CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-:root{--hdr:56px; --flt:80px; --kpi:80px; --ftr:32px; --gap:8px;
+:root{--hdr:64px; --flt:80px; --kpi:94px; --ftr:32px; --gap:8px;
   --M:max(440px, calc(100vh - var(--hdr) - var(--flt) - var(--kpi) - var(--ftr) - 5*var(--gap) - 8px));
-  --A:calc(var(--M) - 52px); --Tt:calc(var(--A)*.555); --Tb:calc(var(--A)*.445); --Rt:calc(var(--A)*.48); --Rb:calc(var(--A)*.52);}
+  --A:calc(var(--M) - 40px); --Tt:calc(var(--A)*.555); --Tb:calc(var(--A)*.445); --Rt:calc(var(--A)*.48); --Rb:calc(var(--A)*.52);}
 header[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], footer, #MainMenu {display:none !important;}
 html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main {background:#eef2f7 !important; color:§INK; color-scheme:light; font-family:"Poppins","Segoe UI",sans-serif;}
 html, body, [data-testid="stAppViewContainer"] {overflow-x:hidden !important;}
@@ -126,18 +130,18 @@ div[data-testid="stElementContainer"]:has(> .st-key-pgnav), [data-testid="stLayo
 [data-testid="stMarkdownContainer"] p {margin:0 !important;}
 /* header */
 .hdr {margin:0 -.6rem; height:var(--hdr); background:#fff; color:§NAVY; display:flex; align-items:center; gap:10px; padding:0 .6rem; border-bottom:3px solid §ORANGE; box-sizing:border-box; box-shadow:0 1px 6px rgba(11,42,74,.10);}
-.hdr .lg {width:44px;height:44px;flex:none;border-radius:8px;background:transparent;color:§NAVY;display:grid;place-items:center;font-weight:800;font-size:9px;text-align:center;line-height:1.1;overflow:hidden;}
+.hdr .lg {width:50px;height:50px;padding:3px;box-sizing:border-box;flex:none;border-radius:8px;background:transparent;color:§NAVY;display:grid;place-items:center;font-weight:800;font-size:9px;text-align:center;line-height:1.1;overflow:hidden;}
 .hdr .lg img {width:100%;height:100%;object-fit:contain;}
 .hdr .ttl {flex:1; text-align:center; min-width:0;}
-.hdr h1 {font-size:18px; margin:0; padding:0; font-weight:700; color:§NAVY; line-height:1.15; letter-spacing:.2px;}
-.hdr .sub {font-size:10.5px; color:#5b6b7f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.hdr h1 {font-size:20px; margin:0; padding:0; font-weight:700; color:§NAVY; line-height:1.15; letter-spacing:.2px;}
+.hdr .sub {font-size:11.5px; color:#5b6b7f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .hdr .bx {flex:none; border:1px solid #d3dde9; border-radius:8px; padding:3px 12px; font-size:11px; line-height:1.25; text-align:center; color:#41546b; background:#f4f7fb;}
 .hdr .bx b {color:§NAVY; font-size:12px;}
 .hdr .pg {width:150px; height:38px; box-sizing:border-box; position:relative;}
 .hdr .pgl {position:absolute; top:2px; left:0; right:0; font-size:9.5px; text-transform:uppercase; letter-spacing:.6px; color:#7a8a9d;}
 [data-testid="stMainBlockContainer"] {position:relative !important;}
 .hdr .pgl {display:none !important;}
-.st-key-pgnav {position:absolute !important; top:14px; right:calc(.6rem + 225px); width:140px; z-index:999990; height:26px; gap:0 !important;}
+.st-key-pgnav {position:absolute !important; top:19px; right:calc(.6rem + 225px); width:140px; z-index:999990; height:26px; gap:0 !important;}
 .st-key-pgnav [data-testid="stSelectbox"] > div, .st-key-pgnav [data-testid="stSelectbox"] div[role="group"], .st-key-pgnav [data-baseweb="select"] > div {min-height:26px !important; height:26px !important; background:§NAVY !important; border-color:§NAVY !important; border-radius:6px !important;}
 .st-key-pgnav input, .st-key-pgnav button, .st-key-pgnav [data-baseweb="select"] div, .st-key-pgnav [data-baseweb="select"] span {height:24px !important; min-height:0 !important; font-size:12px !important; font-weight:600 !important; color:#fff !important; -webkit-text-fill-color:#fff !important; background:transparent !important; text-align:center; line-height:24px !important; padding-top:0 !important; padding-bottom:0 !important;}
 .st-key-pgnav input {text-align:center !important; padding-left:22px !important; caret-color:transparent; cursor:pointer;}
@@ -145,21 +149,12 @@ div[data-testid="stElementContainer"]:has(> .st-key-pgnav), [data-testid="stLayo
 .blank {height:calc(var(--flt) + var(--kpi) + var(--M) + 2*var(--gap) - 16px); border:2px dashed #b9c7d8; border-radius:10px; display:grid; place-items:center; text-align:center; background:rgba(255,255,255,.4);}
 .blank .bt {font-size:20px; font-weight:700; color:§NAVY;} .blank .bs {font-size:12px; color:#7a8a9d; margin-top:4px;} .hdr .idn {width:210px;}
 /* filter */
-.st-key-filt {height:var(--flt); background:§NAVY; border:1px solid #0b2a4a; border-radius:8px; padding:4px 12px !important; box-sizing:border-box; overflow:hidden; justify-content:center;}
+.st-key-filt {height:var(--flt); background:#fff; border:1px solid #dde4ec; border-radius:8px; padding:4px 12px !important; box-sizing:border-box; overflow:hidden; justify-content:center;}
 .st-key-filt [data-testid="stHorizontalBlock"] {align-items:flex-start;}
 .st-key-filt [data-testid="stColumn"]:nth-child(n+5) {padding-top:16px;}
-/* filter bergaya gelap */
-.st-key-filt label p, .st-key-filt [data-testid="stWidgetLabel"] p, .st-key-filt label {color:#b9cde3 !important;}
-.st-key-filt [data-baseweb="select"] > div, .st-key-filt div[role="group"], .st-key-filt [data-baseweb="input"], .st-key-filt [data-baseweb="base-input"], .st-key-filt [data-testid="stDateInput"] > div > div, .st-key-filt [data-testid="stDateInputField"] {background:#15395f !important; border-color:rgba(255,255,255,.22) !important; color:#fff !important;}
-.st-key-filt input, .st-key-filt [data-baseweb="select"] div, .st-key-filt [data-baseweb="select"] span, .st-key-filt div[role="combobox"] {color:#fff !important; -webkit-text-fill-color:#fff !important;}
-.st-key-filt svg {fill:#fff !important; color:#fff !important;}
-.st-key-filt .stButton button, .st-key-filt [data-testid="stPopover"] > button, .st-key-filt [data-testid="stPopoverButton"], .st-key-filt button {background:transparent !important; color:#fff !important; border:1px solid rgba(255,255,255,.55) !important;}
-.st-key-filt button *, .st-key-filt [data-testid="stDateInput"] *, .st-key-filt [data-testid="stDateInputField"] * {color:#fff !important; -webkit-text-fill-color:#fff !important;}
-.st-key-filt [data-testid="stWidgetLabel"], .st-key-filt [data-testid="stWidgetLabel"] * {color:#b9cde3 !important; -webkit-text-fill-color:#b9cde3 !important; font-weight:600 !important;}
 .st-key-filt [data-baseweb="select"] button, .st-key-filt div[role="group"] button {border:0 !important; background:transparent !important;}
-.st-key-filt .stButton button:hover, .st-key-filt [data-testid="stPopover"] > button:hover, .st-key-filt button:hover {background:rgba(255,255,255,.12) !important;}
 [data-testid="stSelectbox"] *, [data-testid="stDateInput"] * {font-size:12px !important;}
-[data-testid="stWidgetLabel"] p {font-size:10px !important; color:#7a8a9d; text-transform:uppercase; letter-spacing:.4px; font-weight:600;}
+[data-testid="stWidgetLabel"] p {font-size:11px !important; color:#5b6b7f; letter-spacing:0; font-weight:600;}
 [data-testid="stWidgetLabel"] {min-height:0 !important; margin:0 0 2px 0 !important; height:auto !important;}
 div[data-baseweb="select"] {min-height:30px !important;}
 div[data-baseweb="select"] > div, div[data-baseweb="input"], div[data-baseweb="base-input"], [data-testid="stDateInputField"] {background:#fff !important; color:§INK !important; border-radius:6px !important; min-height:30px !important; height:30px !important;}
@@ -171,12 +166,12 @@ div[data-baseweb="select"] *, [data-testid="stDateInput"] input {font-size:12px 
 .stButton button p, [data-testid="stPopover"] button p {color:§BLUE !important; font-size:12px !important;}
 /* KPI */
 .kpis {display:grid; grid-template-columns:repeat(5,1fr) 1.15fr; gap:var(--gap); height:var(--kpi);}
-.kpi {background:#fff;border:1px solid #dde4ec;border-top:3px solid §BLUE;border-radius:8px;padding:5px 11px;min-width:0;overflow:hidden;box-sizing:border-box;}
+.kpi {background:#fff;border:1px solid #dde4ec;border-top:3px solid §NAVY;border-radius:8px;padding:5px 12px;min-width:0;overflow:hidden;box-sizing:border-box;}
 .kpi.acc {border-top-color:§TEAL;}
-.kpi .l {font-size:10.5px;color:§INK2;font-weight:600;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.kpi .v {font-size:21px;font-weight:700;line-height:1.2;color:§INK;white-space:nowrap;}
+.kpi .l {font-size:11.5px;color:§INK2;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi .v {font-size:23px;font-weight:700;line-height:1.2;color:§INK;white-space:nowrap;}
 .kpi .v small {font-size:12px;font-weight:600;color:§INK2;}
-.kpi .s {font-size:10px;line-height:1.25;color:§INK2;white-space:normal;max-height:25px;overflow:hidden;}
+.kpi .s {font-size:11px;line-height:1.25;color:§INK2;white-space:normal;max-height:28px;overflow:hidden;}
 .tp {border-bottom:1px dotted #7a8a9d; cursor:help;}
 .kpi .l .tp {border-bottom:none;}
 .pos {color:§ORANGE;} .neg {color:§BLUE;}
@@ -184,9 +179,9 @@ div[data-baseweb="select"] *, [data-testid="stDateInput"] input {font-size:12px 
 .chip.pos {background:#fdebd9;} .chip.neg {background:#dbe8f5;}
 /* seksi */
 .st-key-main {height:var(--M);}
-.st-key-secL, .st-key-secR {height:var(--M); border:1px solid #cdd8e4; border-radius:10px; padding:6px 8px !important; box-sizing:border-box; overflow:hidden; background:rgba(255,255,255,.45);}
-.sec {height:24px; line-height:20px; font-size:12.5px; font-weight:700; color:§NAVY; text-align:center; letter-spacing:.3px; text-transform:uppercase;}
-.sec span {font-weight:500; color:#7a8a9d; text-transform:none; letter-spacing:0; margin-left:6px; font-size:10.5px;}
+.st-key-secL, .st-key-secR {height:var(--M); border:0; padding:0 !important; box-sizing:border-box; overflow:hidden; background:transparent;}
+.sec {height:24px; line-height:22px; font-size:14px; font-weight:700; color:§NAVY; text-align:left; padding-left:2px; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.sec span {font-weight:500; color:§INK2; text-transform:none; letter-spacing:0; margin-left:10px; font-size:12px;}
 .st-key-tsCard > *, .st-key-mapCard > *, .st-key-anCard > *, .st-key-fiCard > *, .st-key-evCard > * {flex-shrink:0 !important;}
 .st-key-tsCard, .st-key-mapCard, .st-key-anCard, .st-key-fiCard, .st-key-evCard {background:#fff; border:1px solid #dde4ec; border-radius:8px; overflow:hidden; gap:0 !important; box-sizing:border-box;}
 .st-key-tsCard {height:var(--Tt); flex:0 0 auto !important;}
@@ -208,11 +203,11 @@ div[data-baseweb="select"] *, [data-testid="stDateInput"] input {font-size:12px 
 .st-key-rowL [data-testid="stColumn"] {height:var(--Tb);}
 .st-key-mapHead {height:30px; flex:0 0 auto !important;}
 .st-key-mapHead [data-testid="stHorizontalBlock"] {align-items:center; padding-right:8px;}
-.ct {font-size:12px;font-weight:650;color:§NAVY;padding:6px 10px 0;height:28px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ct span {font-weight:500;color:#7a8a9d;font-size:10.5px;margin-left:6px;}
-.note {font-size:9.5px;line-height:1.3;color:#6a7b8f;padding:2px 10px 0;height:30px;overflow:hidden;}
+.ct {font-size:13px;font-weight:650;color:§NAVY;padding:6px 10px 0;height:28px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ct span {font-weight:500;color:#5b6b7f;font-size:11px;margin-left:8px;}
+.note {font-size:10.5px;line-height:1.3;color:#5b6b7f;padding:2px 10px 0;height:30px;overflow:hidden;}
 table.ev {border-collapse:collapse;width:100%;font-size:11px;}
-table.ev th {font-size:10px;text-transform:uppercase;color:#7a8a9d;font-weight:600;text-align:right;padding:2px 8px;border-bottom:1px solid #dde4ec;}
+table.ev th {font-size:11px;color:#5b6b7f;font-weight:600;text-align:right;padding:2px 8px;border-bottom:1px solid #dde4ec;}
 table.ev th:first-child, table.ev td:first-child {text-align:left;}
 table.ev td {padding:3px 8px;text-align:right;border-bottom:1px solid #eef2f7;white-space:nowrap;color:§INK;}
 table.ev tr.act td {background:#dbe8f5;font-weight:600;}
@@ -222,9 +217,9 @@ table.ev td.min {color:§ORANGE;font-weight:700;}
 .evw {padding:0 8px;}
 .sumw {display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:6px 10px 0;height:58px;box-sizing:border-box;}
 .sum {border-left:3px solid §BLUE;padding-left:7px;min-width:0;overflow:hidden;}
-.sum .l {font-size:9.5px;color:#7a8a9d;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sum .v {font-size:13px;font-weight:700;color:§INK;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
-.sum .s {font-size:10px;color:#4a5b70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sum .l {font-size:11px;color:#5b6b7f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sum .v {font-size:14px;font-weight:700;color:§INK;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+.sum .s {font-size:11px;color:#4a5b70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* footer */
 .foot {height:var(--ftr); display:grid; grid-template-columns:auto 1fr; gap:var(--gap); box-sizing:border-box;}
 .foot > div {background:#fff; border:1px solid #dde4ec; border-radius:8px; display:flex; align-items:center; padding:0 12px; font-size:10.5px; color:§INK2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; gap:8px;}
@@ -235,6 +230,9 @@ table.ev td.min {color:§ORANGE;font-weight:700;}
   table.ev td {padding:1px 8px !important; font-size:10.5px !important;} table.ev th {padding:1px 8px !important;}
   .bar {height:5px;}
 }
+.kpi.hero {background:#f0f9f9; border-top-color:§TEAL;}
+.kpi.hero .v {font-size:25px;}
+.kpi .v, .sum .v, table.ev td {font-variant-numeric:tabular-nums;}
 /* tinggi grafik */
 §CHARTS
 </style>
@@ -350,7 +348,7 @@ with st.container(key="pgnav"):
 def footer():
     st.markdown(
         f'<div class="foot"><div>Info data <span class="pill"><span class="dot"></span>Data terakhir: {mon_label(last_obs)} · Forecast s.d. {mon_label(fc_end)}</span></div>'
-        f'<div><b>ERA5</b> · Normal {norm_period} · <span class="w">Eksperimental, bersyarat {NINO_NOTE}; bukan produk operasional BMKG</span> · Detail di tombol ⓘ Catatan</div></div>',
+        f'<div><b>ERA5</b> · Normal {norm_period} · <span class="w">Eksperimental · bersyarat skenario Niño 3.4 · bukan produk operasional BMKG</span> · Detail di ⓘ Catatan</div></div>',
         unsafe_allow_html=True,
     )
 
@@ -416,15 +414,15 @@ def fc_for(p):
 def layout(fig, **kw):
     base = dict(separators=",.", font=dict(size=11, color=INK2, family="Poppins, Segoe UI, sans-serif"), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=42, r=12, t=34, b=28), hoverlabel=dict(font_size=11, bgcolor="#fff", font_color=INK),
-                legend=dict(orientation="h", x=0, y=1, yanchor="bottom", font=dict(size=10, color=INK2), tracegroupgap=0, itemwidth=30))
+                legend=dict(orientation="h", x=0, y=1, yanchor="bottom", font=dict(size=11, color=INK2), tracegroupgap=0, itemwidth=30))
     base.update(kw)
     fig.update_layout(**base)
     return fig
 
 
 def axes(fig, x=None, y=None):
-    bx = dict(gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(size=10))
-    by = dict(gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(size=10))
+    bx = dict(gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(size=11))
+    by = dict(gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(size=11))
     bx.update(x or {})
     by.update(y or {})
     fig.update_xaxes(**bx)
@@ -521,9 +519,9 @@ def fig_anom():
     bars(o, True, "ERA5, positif")
     bars(o, False, "ERA5, negatif")
     fig.add_scatter(x=f["d"], y=f["a"], mode="lines+markers", name=f"Forecast (± interval {level}%)",
-                    line=dict(color=TEAL, width=1.6), marker=dict(color=TEAL, size=7, line=dict(color="#fff", width=1)),
+                    line=dict(color=TEAL, width=1.6), marker=dict(color=TEAL, size=5, line=dict(color="#fff", width=1)),
                     error_y=dict(type="data", symmetric=False, array=(f["ahi"] - f["a"]).values, arrayminus=(f["a"] - f["alo"]).values,
-                                 color=TEAL, thickness=1.4, width=4),
+                                 color="rgba(15,139,141,.5)", thickness=1, width=2),
                     customdata=np.stack([f["alo"], f["ahi"]], axis=-1),
                     hovertemplate=(f"<b>{nm}</b><br>Forecast: anomali %{{y:+.2f}} °C<br>Interval {level}%: "
                                    "%{customdata[0]:+.2f} – %{customdata[1]:+.2f} °C<extra></extra>"))
@@ -564,13 +562,13 @@ def fig_fi():
         fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
         return fig, note
     names = [friendly(f) for f in r["fitur"]]
-    fig = go.Figure(go.Bar(x=r["importance"], y=names, orientation="h", marker_color=BLUE, text=[fmt(v, 3) for v in r["importance"]],
-                           textposition="outside", cliponaxis=False, textfont=dict(size=10, color=INK), customdata=np.stack([[describe(f) for f in r["fitur"]], list(r["fitur"])], axis=-1),
+    fig = go.Figure(go.Bar(x=r["importance"], y=names, orientation="h", marker_color=[NAVY if i == len(r) - 1 else "#8aa3bd" for i in range(len(r))], text=[fmt(v, 3) for v in r["importance"]],
+                           textposition="outside", cliponaxis=False, textfont=dict(size=11, color=INK), customdata=np.stack([[describe(f) for f in r["fitur"]], list(r["fitur"])], axis=-1),
                            hovertemplate="<b>%{y}</b> (%{customdata[1]})<br>Importance: %{x:.4f}<br>%{customdata[0]}<extra></extra>"))
     layout(fig, margin=dict(l=8, r=44, t=6, b=28), showlegend=False)
     axes(fig, x=dict(title=dict(text="Kenaikan RMSE bila fitur diacak (°C)", font=dict(size=10), standoff=2),
                      range=[0, (r["importance"].max() if len(r) else 1) * 1.3]),
-         y=dict(automargin=True, gridcolor="rgba(0,0,0,0)", tickmode="array", tickvals=names, ticktext=names, tickfont=dict(size=10, color=INK)))
+         y=dict(automargin=True, gridcolor="rgba(0,0,0,0)", tickmode="array", tickvals=names, ticktext=names, tickfont=dict(size=11, color=INK)))
     return fig, note
 
 
@@ -746,7 +744,7 @@ def fig_map(s, metric):
     x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
     fig.add_scatter(x=[x0], y=[y0], mode="markers", hoverinfo="skip", showlegend=False,
                     marker=dict(size=.1, color=[cmin], cmin=cmin, cmax=cmax, colorscale=stops, showscale=True,
-                                colorbar=dict(thickness=8, len=.85, tickfont=dict(size=9), outlinewidth=0, tickformat="+.2f", x=1.0, xpad=0,
+                                colorbar=dict(thickness=8, len=.8, title=dict(text="°C", side="top", font=dict(size=10)), tickfont=dict(size=10), outlinewidth=0, tickformat="+.2f", x=1.0, xpad=0,
                                               tickvals=[round(v, 2) for v in np.linspace(cmin, cmax, 5)])))
     layout(fig, margin=dict(l=2, r=44, t=2, b=2), showlegend=False, hovermode="closest", dragmode=False,
            clickmode="event+select", xaxis=dict(visible=False, range=[x0 - (x1 - x0) * .03, x1 + (x1 - x0) * .03], constrain="domain", fixedrange=True),
@@ -792,17 +790,17 @@ else:
 cards = [
     ("", f"ERA5 terakhir · {mon_label(last['tanggal'])}" + I("ERA5"), f'{fmt(last["t2m"])} <small>°C</small>',
      f'Anomali <b class="{sg(last["anomali"])}">{fmt(last["anomali"], 2, True)} °C</b> terhadap normal {norm_period} · rata-rata 6 prov.'),
-    ("acc", f"Forecast {mon_label(ref)}" + (" (bulan ini)" if not BULAN_ACUAN and ref == _ref else ""), f'{fmt(fr["p"])} <small>°C</small>',
+    ("acc hero", f"Forecast {mon_label(ref)}" + (" (bulan ini)" if not BULAN_ACUAN and ref == _ref else ""), f'{fmt(fr["p"])} <small>°C</small>',
      f'Anomali <b class="{sg(fr["a"])}">{fmt(fr["a"], 2, True)} °C</b> · {h_ref} bln setelah data terakhir · rata-rata 6 prov.'),
     ("acc", "Rerata anomali 12 bulan", f'<span class="{sg(f_nat["a"].mean())}">{fmt(f_nat["a"].mean(), 2, True)}</span> <small>°C</small>{chip(f_nat["a"].mean())}',
      f'{mon_label(f_nat["d"].iloc[0])} – {mon_label(f_nat["d"].iloc[-1])} · suhu rerata {fmt(f_nat["p"].mean())} °C · rata-rata 6 prov.'),
-    ("acc", "Puncak anomali forecast", f'<span class="{sg(pk["a"])}">{fmt(pk["a"], 2, True)}</span> <small>°C</small>',
+    ("acc hero", "Puncak anomali forecast", f'<span class="{sg(pk["a"])}">{fmt(pk["a"], 2, True)}</span> <small>°C</small>',
      f'{mon_label(pk["d"])} · suhu {fmt(pk["p"])} °C · rata-rata 6 prov.'),
     ("", "Model terbaik (RMSE)" + I("RMSE"), f'{fmt(best["RMSE"], 3)} <small>°C</small>',
      f'{best["pendekatan"]} · {str(best["model"]).replace("HistGradientBoosting", "HGB")} · selisih ke peringkat 2: {fmt(second["RMSE"] - best["RMSE"], 3)} °C'),
 ]
 if nino_ref is not None and D["nsk"] is not None:
-    cards.append(("acc", f"Niño 3.4 · {mon_label(ref)}", f'{fmt(nino_ref)} <small>°C · skenario</small>',
+    cards.append(("acc", f"Niño 3.4 · {mon_label(ref)}" + I("Niño34"), f'{fmt(nino_ref)} <small>°C · skenario</small>',
                   f'Plume IRI · data terakhir {mon_label(nn["tanggal"])}: {fmt(nn["nino34"])} °C ({nn["fase"]})'))
 else:
     cards.append(("acc", "Niño 3.4 terakhir dan fase", f'{fmt(nn["nino34"])} <small>°C · {nn["fase"]}</small>',
@@ -841,7 +839,14 @@ with st.container(key="main"):
 
     # ---------------- kiri: model
     with L.container(key="secL"):
-        st.markdown('<div class="sec">Forecast dan Performa Model<span>observasi, prediksi, evaluasi</span></div>', unsafe_allow_html=True)
+        _fp = fc_for(prov)
+        if len(_fp):
+            _pk = _fp.loc[_fp["a"].idxmax()]
+            _ins = (f"{'6 provinsi' if prov == 'ALL' else pl(prov)}: anomali positif di {int((_fp['a'] >= 0).sum())} dari {len(_fp)} bulan forecast, "
+                    f"puncak {mon_label(_pk['d'])} ({fmt(_pk['a'], 2, True)} °C)")
+        else:
+            _ins = "observasi, prediksi, evaluasi"
+        st.markdown(f'<div class="sec">Forecast dan performa model<span>{_ins}</span></div>', unsafe_allow_html=True)
         with st.container(key="tsCard"):
             with st.container(key="tsHead"):
                 h1, h2 = st.columns([2.4, 1.6], vertical_alignment="center")
@@ -875,7 +880,7 @@ with st.container(key="main"):
 
     # ---------------- kanan: anomali
     with R.container(key="secR"):
-        st.markdown('<div class="sec">Anomali Suhu<span>sebaran spasial dan tren</span></div>', unsafe_allow_html=True)
+        st.markdown('<div class="sec">Anomali suhu<span>sebaran spasial dan tren</span></div>', unsafe_allow_html=True)
         with st.container(key="mapCard"):
             s = summary()
             geo_ok = D["geo"] is not None and len(prep_geo(D["geo"], tuple(PROVS))) > 0
@@ -896,7 +901,7 @@ with st.container(key="main"):
             pk = str(mxr["peak"])
             pk = mon_label(pk[:7] + "-01") if len(pk) >= 7 else pk
             who = "rata-rata 6 prov." if prov == "ALL" else pl(prov)
-            vals = [("Rerata anomali", fmt(sc["mean"].mean(), 2, True) + " °C", f"forecast 12 bln · {who}"),
+            vals = [("Rerata anomali", fmt(sc["mean"].mean(), 2, True) + " °C", f"12 bln · {'6 prov.' if prov == 'ALL' else pl(prov)}"),
                     ("Anomali maks", fmt(mxr["max"], 2, True) + " °C", f"{pl(mxr['prov'])} · {pk}"),
                     ("Rerata tertinggi", pl(hi_["prov"]), fmt(hi_["mean"], 2, True) + " °C"),
                     ("Rerata terendah", pl(lo_["prov"]), fmt(lo_["mean"], 2, True) + " °C")]
