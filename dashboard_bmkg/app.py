@@ -131,7 +131,8 @@ div[data-testid="stElementContainer"] {margin:0 !important; flex-shrink:0 !impor
 .hdr .bx b {color:#fff; font-size:12px;}
 .hdr .pg {width:150px; height:38px; box-sizing:border-box; position:relative;}
 .hdr .pgl {position:absolute; top:2px; left:0; right:0; font-size:9.5px; text-transform:uppercase; letter-spacing:.6px; color:#b9cde3;}
-.st-key-pgnav {position:fixed !important; top:32px; right:239px; width:148px; z-index:999990; height:22px; gap:0 !important;}
+[data-testid="stMainBlockContainer"] {position:relative !important;}
+.st-key-pgnav {position:absolute !important; top:37px; right:232px; width:148px; z-index:999990; height:22px; gap:0 !important;}
 .st-key-pgnav [data-testid="stButtonGroup"] {width:100%; justify-content:center;}
 .st-key-pgnav button {min-height:22px !important; height:22px !important; padding:0 12px !important; font-size:11px !important;}
 .st-key-pgnav button p, .st-key-pgnav button div {font-size:11px !important;}
@@ -292,8 +293,13 @@ def reset_all():
 
 
 # ------------------------------------------------------------------ header (identitas bisa diubah di sini)
-NAMA_SAYA = "Abie Septian Wibowo"
-UNIT_SAYA = "G1401231069"
+# Satu halaman = satu orang. Ganti judul, nama, dan unit tiap halaman di sini (nama di header ikut berubah per halaman).
+PAGES = {
+    "1": {"judul": "Dashboard utama", "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
+    "2": {"judul": "Halaman 2", "nama": "Nama Teman 2", "unit": "Magang BMKG · IPB"},
+    "3": {"judul": "Halaman 3", "nama": "Nama Teman 3", "unit": "Magang BMKG · IPB"},
+    "4": {"judul": "Halaman 4", "nama": "Nama Teman 4", "unit": "Magang BMKG · IPB"},
+}
 
 
 def _logo(fn, txt):
@@ -305,18 +311,21 @@ def _logo(fn, txt):
     return f'<div class="lg">{txt}</div>'
 
 
+with st.container(key="pgnav"):
+    try:
+        PAGE = st.segmented_control("Halaman", list(PAGES), default="1", key="page", label_visibility="collapsed") or "1"
+    except Exception:
+        PAGE = st.radio("Halaman", list(PAGES), horizontal=True, key="page_r", label_visibility="collapsed")
+ID = PAGES[PAGE]
 st.markdown(
     f"""<div class="hdr">{_logo("logo_bmkg", "logo<br>BMKG")}{_logo("logo_ipb", "logo<br>IPB")}
 <div class="ttl"><h1>Dashboard Forecast Suhu Udara Pulau Jawa</h1>
 <div class="sub">Pemantauan t2m, anomali, dan performa model ML untuk 6 provinsi, ERA5 + Niño 3.4</div></div>
-<div class="bx pg"><span class="pgl">Halaman</span></div><div class="bx idn"><b>{NAMA_SAYA}</b><br>{UNIT_SAYA}</div></div>""",
+<div class="bx pg"><span class="pgl">Halaman</span></div><div class="bx idn"><b>{ID["nama"]}</b><br>{ID["unit"]}</div></div>""",
     unsafe_allow_html=True,
 )
 
 # ------------------------------------------------------------------ halaman (2-4 masih kosong)
-PAGES = {"1": "Dashboard utama", "2": "Halaman 2", "3": "Halaman 3", "4": "Halaman 4"}   # ganti judul di sini
-
-
 def footer():
     st.markdown(
         f'<div class="foot"><div>Info data <span class="pill"><span class="dot"></span>Data terakhir: {mon_label(last_obs)} · Forecast s.d. {mon_label(fc_end)}</span></div>'
@@ -325,11 +334,6 @@ def footer():
     )
 
 
-with st.container(key="pgnav"):
-    try:
-        PAGE = st.segmented_control("Halaman", list(PAGES), default="1", key="page", label_visibility="collapsed") or "1"
-    except Exception:
-        PAGE = st.radio("Halaman", list(PAGES), horizontal=True, key="page_r", label_visibility="collapsed")
 # ------------------------------------------------------------------ filter
 filt = st.container(key="filt")
 c1, c2, c3, c4, c5, c6 = filt.columns([1.2, 1.2, 1, 1.5, .55, .6])
@@ -366,7 +370,7 @@ else:
 # ------------------------------------------------------------------ halaman 2-4 (kosong). Filter tetap dirender (disembunyikan) agar pilihannya tidak hilang.
 if PAGE != "1":
     st.markdown("<style>.st-key-filt {display:none !important;}</style>", unsafe_allow_html=True)
-    st.markdown(f'<div class="blank"><div><div class="bt">{PAGES[PAGE]}</div><div class="bs">Konten menyusul</div></div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="blank"><div><div class="bt">{ID["judul"]}</div><div class="bs">Konten menyusul</div></div></div>', unsafe_allow_html=True)
     footer()
     st.stop()
 
