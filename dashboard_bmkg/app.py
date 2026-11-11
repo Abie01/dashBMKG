@@ -180,7 +180,9 @@ div[data-baseweb="select"] *, [data-testid="stDateInput"] input {font-size:12px 
 .st-key-tsHead [data-testid="stButtonGroup"] button, .st-key-tsHead [data-baseweb="button-group"] button {min-height:24px !important; height:26px !important; padding:0 10px !important;}
 .st-key-tsHead [data-testid="stButtonGroup"] button p, .st-key-tsHead [data-testid="stButtonGroup"] button div, .st-key-tsHead label p {font-size:11px !important;}
 .st-key-tsHead {height:30px; flex:0 0 auto !important;}
-.st-key-tsHead [data-testid="stHorizontalBlock"] {align-items:center; padding-right:8px;}
+.st-key-tsHead [data-testid="stHorizontalBlock"] {align-items:center; padding-right:4px;}
+.st-key-tsHead [data-testid="stHorizontalBlock"] > div:last-child {display:flex; justify-content:flex-end;}
+.st-key-tsHead [data-testid="stHorizontalBlock"] > div:last-child > div {width:auto !important;}
 .st-key-rowL {height:var(--Tb); flex:0 0 auto !important;}
 .st-key-rowL [data-testid="stHorizontalBlock"] {height:var(--Tb);}
 .st-key-rowL [data-testid="stColumn"] {height:var(--Tb);}
@@ -217,7 +219,7 @@ table.ev td.min {color:§ORANGE;font-weight:700;}
 §CHARTS
 </style>
 """
-_CHARTS = (_h("c_temp", "calc(var(--Tt) - 34px)") + _h("c_anom", "calc(var(--Rb) - 30px)") + _h("c_fi", "calc(var(--Tb) - 62px)")
+_CHARTS = (_h("c_temp", "calc(var(--Tt) - 34px)") + _h("c_anom", "calc(var(--Rb) - 30px)") + _h("c_fi", "calc(var(--Tb) - 40px)")
            + _h("map_sel", "calc(var(--Rt) - 30px - 58px - 4px)") + _h("bars", "calc(var(--Rt) - 30px - 58px - 4px)"))
 for _k, _v in {"§NAVY": NAVY, "§BLUE": BLUE, "§ORANGE": ORANGE, "§INK2": INK2, "§INK": INK, "§TEAL": TEAL, "§CHARTS": _CHARTS}.items():
     _CSS = _CSS.replace(_k, _v)
@@ -295,7 +297,7 @@ def reset_all():
 # ------------------------------------------------------------------ header (identitas bisa diubah di sini)
 # Satu halaman = satu orang. Ganti judul, nama, dan unit tiap halaman di sini (nama di header ikut berubah per halaman).
 PAGES = {
-    "1": {"judul": "Dashboard utama", "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
+    "1": {"judul": "Dashboard utama", "nama": "Abie Septian Wibowo", "unit": "Statistika dan Sains Data IPB · G1401231069"},
     "2": {"judul": "Halaman 2", "nama": "Nama Teman 2", "unit": "Magang BMKG · IPB"},
     "3": {"judul": "Halaman 3", "nama": "Nama Teman 3", "unit": "Magang BMKG · IPB"},
     "4": {"judul": "Halaman 4", "nama": "Nama Teman 4", "unit": "Magang BMKG · IPB"},
@@ -492,23 +494,20 @@ def fig_anom():
     nm = "Rata-rata 6 provinsi" if prov == "ALL" else pl(prov)
     fig = go.Figure()
 
-    def bars(df, pos, name, hatch, leg=True):
+    def bars(df, pos, name):
         a = df[df["a"] >= 0] if pos else df[df["a"] < 0]
-        col = TEAL if hatch else (ORANGE if pos else BLUE)
-        kw = dict(x=a["d"], y=a["a"], name=name, showlegend=leg, marker=dict(color=col), hovertemplate=f"<b>{nm}</b><br>ERA5: anomali %{{y:+.2f}} °C<extra></extra>")
-        if hatch:
-            kw["marker"] = dict(color=col, pattern=dict(shape="/", bgcolor="#fff", fgcolor=col, size=5, solidity=.55), line=dict(color=col, width=1))
-            kw["error_y"] = dict(type="data", symmetric=False, array=(a["ahi"] - a["a"]).values, arrayminus=(a["a"] - a["alo"]).values,
-                                 color="#5d6b7c", thickness=1, width=2)
-            kw["customdata"] = np.stack([a["alo"], a["ahi"]], axis=-1)
-            kw["hovertemplate"] = (f"<b>{nm}</b><br>Forecast: anomali %{{y:+.2f}} °C<br>Interval {level}%: "
-                                   "%{customdata[0]:+.2f} – %{customdata[1]:+.2f} °C<extra></extra>")
-        fig.add_bar(**kw)
+        fig.add_bar(x=a["d"], y=a["a"], name=name, marker=dict(color=ORANGE if pos else BLUE),
+                    hovertemplate=f"<b>{nm}</b><br>ERA5: anomali %{{y:+.2f}} °C<extra></extra>")
 
-    bars(o, True, "ERA5, positif", False)
-    bars(o, False, "ERA5, negatif", False)
-    bars(f, True, f"Forecast (± interval {level}%)", True)
-    bars(f, False, "Forecast negatif", True, False)
+    bars(o, True, "ERA5, positif")
+    bars(o, False, "ERA5, negatif")
+    fig.add_scatter(x=f["d"], y=f["a"], mode="lines+markers", name=f"Forecast (± interval {level}%)",
+                    line=dict(color=TEAL, width=1.6), marker=dict(color=TEAL, size=7, line=dict(color="#fff", width=1)),
+                    error_y=dict(type="data", symmetric=False, array=(f["ahi"] - f["a"]).values, arrayminus=(f["a"] - f["alo"]).values,
+                                 color=TEAL, thickness=1.4, width=4),
+                    customdata=np.stack([f["alo"], f["ahi"]], axis=-1),
+                    hovertemplate=(f"<b>{nm}</b><br>Forecast: anomali %{{y:+.2f}} °C<br>Interval {level}%: "
+                                   "%{customdata[0]:+.2f} – %{customdata[1]:+.2f} °C<extra></extra>"))
     divider(fig, bottom=True)
     fig.add_hline(y=0, line=dict(color=ZERO, width=1))
     layout(fig, barmode="overlay", bargap=.15, hovermode="x unified", margin=dict(l=42, r=12, t=40, b=28))
@@ -639,15 +638,10 @@ def _hx(h):
 
 def color_scale(lo, hi):
     """Skala warna dinamis. Semua positif -> oranye bertingkat; semua negatif -> biru bertingkat; campuran -> divergen simetris."""
-    pad = max(0.05, (hi - lo) * 0.18)
-    if lo >= 0:
-        cmin, cmax, stops = max(0.0, lo - pad), hi + pad, [[0, "#fde7cf"], [1, "#b84a00"]]
-    elif hi <= 0:
-        cmin, cmax, stops = lo - pad, min(0.0, hi + pad), [[0, "#14548f"], [1, "#d7e6f5"]]
-    else:
-        m = max(abs(lo), abs(hi))
-        cmin, cmax, stops = -m, m, [[0, BLUE], [.5, "#f4f4f4"], [1, ORANGE]]
-    return cmin, cmax, stops
+    # skala tetap divergen (biru = negatif, oranye = positif), simetris di sekitar 0, supaya legenda selalu berisi biru dan oranye
+    m = max(abs(lo), abs(hi), 0.3)
+    m = float(np.ceil(m / 0.25) * 0.25)
+    return -m, m, [[0, BLUE], [.5, "#f4f4f4"], [1, ORANGE]]
 
 
 def scale_rgb(v, cmin, cmax, stops):
@@ -729,7 +723,7 @@ def fig_map(s, metric):
     fig.add_scatter(x=[x0], y=[y0], mode="markers", hoverinfo="skip", showlegend=False,
                     marker=dict(size=.1, color=[cmin], cmin=cmin, cmax=cmax, colorscale=stops, showscale=True,
                                 colorbar=dict(thickness=8, len=.85, tickfont=dict(size=9), outlinewidth=0, tickformat="+.2f", x=1.0, xpad=0,
-                                              tickvals=[round(v, 2) for v in np.linspace(cmin, cmax, 4)])))
+                                              tickvals=[round(v, 2) for v in np.linspace(cmin, cmax, 5)])))
     layout(fig, margin=dict(l=2, r=44, t=2, b=2), showlegend=False, hovermode="closest", dragmode=False,
            clickmode="event+select", xaxis=dict(visible=False, range=[x0 - (x1 - x0) * .03, x1 + (x1 - x0) * .03], constrain="domain", fixedrange=True),
            yaxis=dict(visible=False, range=[y0 - (y1 - y0) * .16, y1 + (y1 - y0) * .22], scaleanchor="x", scaleratio=1, constrain="domain", fixedrange=True))
@@ -776,7 +770,7 @@ cards = [
      f'Anomali <b class="{sg(last["anomali"])}">{fmt(last["anomali"], 2, True)} °C</b> terhadap normal {norm_period} · rata-rata 6 prov.'),
     ("acc", f"Forecast {mon_label(ref)}" + (" (bulan ini)" if not BULAN_ACUAN and ref == _ref else ""), f'{fmt(fr["p"])} <small>°C</small>',
      f'Anomali <b class="{sg(fr["a"])}">{fmt(fr["a"], 2, True)} °C</b> · {h_ref} bln setelah data terakhir · rata-rata 6 prov.'),
-    ("acc", "Forecast 12 bulan: anomali rerata", f'<span class="{sg(f_nat["a"].mean())}">{fmt(f_nat["a"].mean(), 2, True)}</span> <small>°C</small>{chip(f_nat["a"].mean())}',
+    ("acc", "Rerata anomali 12 bulan", f'<span class="{sg(f_nat["a"].mean())}">{fmt(f_nat["a"].mean(), 2, True)}</span> <small>°C</small>{chip(f_nat["a"].mean())}',
      f'{mon_label(f_nat["d"].iloc[0])} – {mon_label(f_nat["d"].iloc[-1])} · suhu rerata {fmt(f_nat["p"].mean())} °C · rata-rata 6 prov.'),
     ("acc", "Puncak anomali forecast", f'<span class="{sg(pk["a"])}">{fmt(pk["a"], 2, True)}</span> <small>°C</small>',
      f'{mon_label(pk["d"])} · suhu {fmt(pk["p"])} °C · rata-rata 6 prov.'),
@@ -848,7 +842,7 @@ with st.container(key="main"):
                 st.markdown(f'<div class="ct">Feature Importance, Top 8 {tip("ⓘ", "Importance")}<span>{ALGO_NAME[algo]} · {src}</span></div>', unsafe_allow_html=True)
                 plot(fg, key="c_fi")
                 n_feat = int(imp[(imp["model"] == ALGO_NAME[algo]) & (imp["pendekatan"] == src)]["fitur"].nunique())
-                st.markdown(f'<div class="note">Top 8 dari {n_feat} fitur · {note}. Importance = kenaikan RMSE bila fitur diacak; <b>bukan bukti sebab-akibat</b>.</div>', unsafe_allow_html=True)
+                pass
             with b.container(key="evCard"):
                 h, scope, n = eval_table()
                 st.markdown(f'<div class="ct">Evaluasi model, final test 12 bulan<span>{"semua provinsi" if prov == "ALL" else pl(prov)}</span></div>', unsafe_allow_html=True)
