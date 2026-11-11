@@ -105,11 +105,12 @@ def _h(key, expr):
 
 _CSS = """
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 :root{--hdr:56px; --flt:80px; --kpi:80px; --ftr:32px; --gap:8px;
   --M:max(440px, calc(100vh - var(--hdr) - var(--flt) - var(--kpi) - var(--ftr) - 5*var(--gap) - 8px));
   --A:calc(var(--M) - 52px); --Tt:calc(var(--A)*.555); --Tb:calc(var(--A)*.445); --Rt:calc(var(--A)*.48); --Rb:calc(var(--A)*.52);}
 header[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], footer, #MainMenu {display:none !important;}
-html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main {background:#eef2f7 !important; color:§INK; color-scheme:light; font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}
+html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main {background:#eef2f7 !important; color:§INK; color-scheme:light; font-family:"Poppins","Segoe UI",sans-serif;}
 html, body, [data-testid="stAppViewContainer"] {overflow-x:hidden !important;}
 [data-testid="stMain"] {overflow-y:auto !important;}
 .block-container {padding:0 .6rem 0 .6rem !important; max-width:100% !important;}
@@ -356,7 +357,7 @@ def fc_for(p):
 
 
 def layout(fig, **kw):
-    base = dict(separators=",.", font=dict(size=11, color=INK2, family="Segoe UI, Roboto, Arial, sans-serif"), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+    base = dict(separators=",.", font=dict(size=11, color=INK2, family="Poppins, Segoe UI, sans-serif"), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=42, r=12, t=34, b=28), hoverlabel=dict(font_size=11, bgcolor="#fff", font_color=INK),
                 legend=dict(orientation="h", x=0, y=1, yanchor="bottom", font=dict(size=10, color=INK2), tracegroupgap=0, itemwidth=30))
     base.update(kw)
@@ -719,24 +720,39 @@ best, second = ml.iloc[0], ml.iloc[1]
 nn = nino.sort_values("tanggal").iloc[-1]
 sg = lambda v: "pos" if v >= 0 else "neg"
 chip = lambda v: f'<span class="chip {sg(v)}">{"Positif" if v >= 0 else "Negatif"}</span>'
-_ly = nat_obs[nat_obs["tanggal"] == pd.Timestamp(last["tanggal"]) - pd.DateOffset(years=1)]
-if len(_ly):
-    dT, dT_lbl = last["t2m"] - float(_ly["t2m"].iloc[0]), mon_label(_ly["tanggal"].iloc[0])
-else:
-    dT, dT_lbl = last["t2m"] - prev["t2m"], mon_label(prev["tanggal"])
+# bulan acuan KPI forecast = bulan berjalan (atau isi manual, mis. "2026-11"), dibatasi pada horizon forecast
+BULAN_ACUAN = None
+_ref = pd.Timestamp(BULAN_ACUAN + "-01") if BULAN_ACUAN else pd.Timestamp.today().to_period("M").to_timestamp()
+ref = min(max(_ref, fc_start), fc_end)
+fr = f_nat[f_nat["d"] == ref]
+fr = fr.iloc[0] if len(fr) else f0
+h_ref = (ref.year - pd.Timestamp(last["tanggal"]).year) * 12 + ref.month - pd.Timestamp(last["tanggal"]).month   # jarak (bulan) dari data terakhir
+pk = f_nat.loc[f_nat["a"].idxmax()]
 I = lambda k: f' <span class="tp" title="{GLOSS[k]}">ⓘ</span>'
+if D["nsk"] is not None and len(D["nsk"]):
+    _r = D["nsk"].assign(tanggal=pd.to_datetime(D["nsk"]["tanggal"]))
+    _r = _r[_r["tanggal"] == ref]
+    nino_ref = float(_r["nino34"].iloc[0]) if len(_r) else None
+else:
+    nino_ref = NINO_ASUMSI
 cards = [
-    ("", "Suhu ERA5 · rata-rata 6 prov." + I("ERA5"), f'{fmt(last["t2m"])} <small>°C</small>',
-     f'{mon_label(last["tanggal"])} · {"▲" if dT >= 0 else "▼"} {fmt(dT, 2, True)} °C vs {dT_lbl} (bulan yang sama tahun lalu)'),
-    ("acc", "Prediksi suhu · rata-rata 6 prov.", f'{fmt(f0["p"])} <small>°C</small>', f'Target {mon_label(f0["d"])} · rerata 12 bln {fmt(f_nat["p"].mean())} °C'),
-    ("", "Anomali ERA5 · rata-rata 6 prov." + I("Anomali"), f'<span class="{sg(last["anomali"])}">{fmt(last["anomali"], 2, True)}</span> <small>°C</small>{chip(last["anomali"])}',
-     f'{mon_label(last["tanggal"])} · terhadap normal {norm_period}'),
-    ("acc", "Prediksi anomali · rata-rata 6 prov.", f'<span class="{sg(f0["a"])}">{fmt(f0["a"], 2, True)}</span> <small>°C</small>{chip(f0["a"])}',
-     f'{mon_label(f0["d"])} · {"▲ di atas" if f0["a"] > last["anomali"] else "▼ di bawah"} anomali ERA5 terakhir · rerata 12 bln {fmt(f_nat["a"].mean(), 2, True)} °C'),
+    ("", f"ERA5 terakhir · {mon_label(last['tanggal'])}" + I("ERA5"), f'{fmt(last["t2m"])} <small>°C</small>',
+     f'Anomali <b class="{sg(last["anomali"])}">{fmt(last["anomali"], 2, True)} °C</b> terhadap normal {norm_period} · rata-rata 6 prov.'),
+    ("acc", f"Forecast {mon_label(ref)}" + (" (bulan ini)" if not BULAN_ACUAN and ref == _ref else ""), f'{fmt(fr["p"])} <small>°C</small>',
+     f'Anomali <b class="{sg(fr["a"])}">{fmt(fr["a"], 2, True)} °C</b> · {h_ref} bln setelah data terakhir · rata-rata 6 prov.'),
+    ("acc", "Forecast 12 bulan: anomali rerata", f'<span class="{sg(f_nat["a"].mean())}">{fmt(f_nat["a"].mean(), 2, True)}</span> <small>°C</small>{chip(f_nat["a"].mean())}',
+     f'{mon_label(f_nat["d"].iloc[0])} – {mon_label(f_nat["d"].iloc[-1])} · suhu rerata {fmt(f_nat["p"].mean())} °C · rata-rata 6 prov.'),
+    ("acc", "Puncak anomali forecast", f'<span class="{sg(pk["a"])}">{fmt(pk["a"], 2, True)}</span> <small>°C</small>',
+     f'{mon_label(pk["d"])} · suhu {fmt(pk["p"])} °C · rata-rata 6 prov.'),
     ("", "Model terbaik (RMSE)" + I("RMSE"), f'{fmt(best["RMSE"], 3)} <small>°C</small>',
      f'{best["pendekatan"]} · {str(best["model"]).replace("HistGradientBoosting", "HGB")} · selisih ke peringkat 2: {fmt(second["RMSE"] - best["RMSE"], 3)} °C'),
-    ("acc", "Niño 3.4 terakhir dan fase", f'{fmt(nn["nino34"])} <small>°C · {nn["fase"]}</small>', f'{mon_label(nn["tanggal"])} (data) · forecast memakai {NINO_TXT}'),
 ]
+if nino_ref is not None and D["nsk"] is not None:
+    cards.append(("acc", f"Niño 3.4 · {mon_label(ref)}", f'{fmt(nino_ref)} <small>°C · skenario</small>',
+                  f'Plume IRI · data terakhir {mon_label(nn["tanggal"])}: {fmt(nn["nino34"])} °C ({nn["fase"]})'))
+else:
+    cards.append(("acc", "Niño 3.4 terakhir dan fase", f'{fmt(nn["nino34"])} <small>°C · {nn["fase"]}</small>',
+                  f'{mon_label(nn["tanggal"])} (data) · forecast memakai {NINO_TXT}'))
 st.markdown('<div class="kpis">' + "".join(f'<div class="kpi {c}"><div class="l">{l}</div><div class="v">{v}</div><div class="s" title="{re.sub("<[^>]+>", "", s_)}">{s_}</div></div>' for c, l, v, s_ in cards) + "</div>",
             unsafe_allow_html=True)
 
