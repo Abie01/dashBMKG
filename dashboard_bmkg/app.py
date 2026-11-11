@@ -113,29 +113,35 @@ header[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecor
 html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main {background:#eef2f7 !important; color:§INK; color-scheme:light; font-family:"Poppins","Segoe UI",sans-serif;}
 html, body, [data-testid="stAppViewContainer"] {overflow-x:hidden !important;}
 [data-testid="stMain"] {overflow-y:auto !important;}
-.block-container {padding:0 .6rem 0 .6rem !important; max-width:100% !important;}
+.block-container, [data-testid="stMainBlockContainer"], .stMainBlockContainer {padding:0 .6rem 0 .6rem !important; max-width:100% !important;}
+[data-testid="stMain"] > div:first-child, [data-testid="stMainBlockContainer"] > div:first-child {padding-top:0 !important; margin-top:0 !important;}
 [data-testid="stVerticalBlock"] {gap:var(--gap) !important;}
 [data-testid="stHorizontalBlock"] {gap:var(--gap) !important;}
 div[data-testid="stElementContainer"] {margin:0 !important; flex-shrink:0 !important;}
 .st-key-main, .st-key-filt, .st-key-secL, .st-key-secR, .st-key-rowL {flex-shrink:0 !important;}
 [data-testid="stMarkdown"], [data-testid="stMarkdownContainer"] {margin:0 !important;}
+/* elemen tanpa tinggi (CSS, nav absolut) jangan ikut dihitung gap */
+div[data-testid="stElementContainer"]:has(> [data-testid="stMarkdown"] style) {display:none !important;}
+div[data-testid="stElementContainer"]:has(> .st-key-pgnav) {margin-bottom:calc(-1*var(--gap)) !important; height:0 !important; min-height:0 !important;}
 [data-testid="stMarkdownContainer"] p {margin:0 !important;}
 /* header */
-.hdr {margin:0 -.6rem; height:var(--hdr); background:§NAVY; color:#fff; display:flex; align-items:center; gap:10px; padding:0 .6rem; border-bottom:3px solid §ORANGE; box-sizing:border-box;}
-.hdr .lg {width:40px;height:40px;flex:none;border-radius:8px;background:#fff;color:§NAVY;display:grid;place-items:center;font-weight:800;font-size:9px;text-align:center;line-height:1.1;overflow:hidden;}
+.hdr {margin:0 -.6rem; height:var(--hdr); background:#fff; color:§NAVY; display:flex; align-items:center; gap:10px; padding:0 .6rem; border-bottom:3px solid §ORANGE; box-sizing:border-box; box-shadow:0 1px 6px rgba(11,42,74,.10);}
+.hdr .lg {width:44px;height:44px;flex:none;border-radius:8px;background:transparent;color:§NAVY;display:grid;place-items:center;font-weight:800;font-size:9px;text-align:center;line-height:1.1;overflow:hidden;}
 .hdr .lg img {width:100%;height:100%;object-fit:contain;}
 .hdr .ttl {flex:1; text-align:center; min-width:0;}
-.hdr h1 {font-size:18px; margin:0; padding:0; font-weight:700; color:#fff; line-height:1.15; letter-spacing:.2px;}
-.hdr .sub {font-size:10.5px; color:#b9cde3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.hdr .bx {flex:none; border:1px solid rgba(255,255,255,.35); border-radius:8px; padding:3px 12px; font-size:11px; line-height:1.25; text-align:center; color:#e4eef8; background:rgba(255,255,255,.08);}
-.hdr .bx b {color:#fff; font-size:12px;}
+.hdr h1 {font-size:18px; margin:0; padding:0; font-weight:700; color:§NAVY; line-height:1.15; letter-spacing:.2px;}
+.hdr .sub {font-size:10.5px; color:#5b6b7f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.hdr .bx {flex:none; border:1px solid #d3dde9; border-radius:8px; padding:3px 12px; font-size:11px; line-height:1.25; text-align:center; color:#41546b; background:#f4f7fb;}
+.hdr .bx b {color:§NAVY; font-size:12px;}
 .hdr .pg {width:150px; height:38px; box-sizing:border-box; position:relative;}
-.hdr .pgl {position:absolute; top:2px; left:0; right:0; font-size:9.5px; text-transform:uppercase; letter-spacing:.6px; color:#b9cde3;}
+.hdr .pgl {position:absolute; top:2px; left:0; right:0; font-size:9.5px; text-transform:uppercase; letter-spacing:.6px; color:#7a8a9d;}
 [data-testid="stMainBlockContainer"] {position:relative !important;}
-.st-key-pgnav {position:absolute !important; top:37px; right:232px; width:148px; z-index:999990; height:22px; gap:0 !important;}
-.st-key-pgnav [data-testid="stButtonGroup"] {width:100%; justify-content:center;}
-.st-key-pgnav button {min-height:22px !important; height:22px !important; padding:0 12px !important; font-size:11px !important;}
-.st-key-pgnav button p, .st-key-pgnav button div {font-size:11px !important;}
+.hdr .pgl {display:none !important;}
+.st-key-pgnav {position:absolute !important; top:14px; right:calc(.6rem + 225px); width:140px; z-index:999990; height:26px; gap:0 !important;}
+.st-key-pgnav [data-testid="stSelectbox"] > div, .st-key-pgnav [data-testid="stSelectbox"] div[role="group"], .st-key-pgnav [data-baseweb="select"] > div {min-height:26px !important; height:26px !important; background:#fff !important; border-color:#d3dde9 !important; border-radius:6px !important;}
+.st-key-pgnav input, .st-key-pgnav button, .st-key-pgnav [data-baseweb="select"] div, .st-key-pgnav [data-baseweb="select"] span {height:24px !important; min-height:0 !important; font-size:12px !important; font-weight:600 !important; color:§NAVY !important; text-align:center; line-height:24px !important; padding-top:0 !important; padding-bottom:0 !important;}
+.st-key-pgnav input {text-align:center !important; padding-left:22px !important; caret-color:transparent; cursor:pointer;}
+.st-key-pgnav svg {width:14px !important; height:14px !important;}
 .blank {height:calc(var(--flt) + var(--kpi) + var(--M) + 2*var(--gap) - 16px); border:2px dashed #b9c7d8; border-radius:10px; display:grid; place-items:center; text-align:center; background:rgba(255,255,255,.4);}
 .blank .bt {font-size:20px; font-weight:700; color:§NAVY;} .blank .bs {font-size:12px; color:#7a8a9d; margin-top:4px;} .hdr .idn {width:210px;}
 /* filter */
@@ -297,7 +303,7 @@ def reset_all():
 # ------------------------------------------------------------------ header (identitas bisa diubah di sini)
 # Satu halaman = satu orang. Ganti judul, nama, dan unit tiap halaman di sini (nama di header ikut berubah per halaman).
 PAGES = {
-    "1": {"judul": "Dashboard utama", "nama": "Abie Septian Wibowo", "unit": "Statistika dan Sains Data IPB · G1401231069"},
+    "1": {"judul": "Dashboard utama", "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
     "2": {"judul": "Halaman 2", "nama": "Nama Teman 2", "unit": "Magang BMKG · IPB"},
     "3": {"judul": "Halaman 3", "nama": "Nama Teman 3", "unit": "Magang BMKG · IPB"},
     "4": {"judul": "Halaman 4", "nama": "Nama Teman 4", "unit": "Magang BMKG · IPB"},
@@ -313,11 +319,7 @@ def _logo(fn, txt):
     return f'<div class="lg">{txt}</div>'
 
 
-with st.container(key="pgnav"):
-    try:
-        PAGE = st.segmented_control("Halaman", list(PAGES), default="1", key="page", label_visibility="collapsed") or "1"
-    except Exception:
-        PAGE = st.radio("Halaman", list(PAGES), horizontal=True, key="page_r", label_visibility="collapsed")
+PAGE = SS.get("page") or "1"   # nilai pilihan halaman (widget-nya dibuat setelah header)
 ID = PAGES[PAGE]
 st.markdown(
     f"""<div class="hdr">{_logo("logo_bmkg", "logo<br>BMKG")}{_logo("logo_ipb", "logo<br>IPB")}
@@ -328,6 +330,9 @@ st.markdown(
 )
 
 # ------------------------------------------------------------------ halaman (2-4 masih kosong)
+with st.container(key="pgnav"):
+    PAGE = st.selectbox("Halaman", list(PAGES), key="page", label_visibility="collapsed", format_func=lambda k: f"Halaman {k}")
+
 def footer():
     st.markdown(
         f'<div class="foot"><div>Info data <span class="pill"><span class="dot"></span>Data terakhir: {mon_label(last_obs)} · Forecast s.d. {mon_label(fc_end)}</span></div>'
@@ -539,6 +544,11 @@ def fig_fi():
     else:
         r, note = r.groupby("fitur", as_index=False)["importance"].mean(), "rata-rata importance 6 model provinsi"
     r = r.sort_values("importance", ascending=False).head(8).iloc[::-1]
+    if not len(r):
+        fig = go.Figure(); layout(fig, margin=dict(l=8, r=8, t=6, b=8), showlegend=False)
+        fig.add_annotation(text="Importance belum tersedia untuk kombinasi ini", xref="paper", yref="paper", x=.5, y=.5, showarrow=False, font=dict(size=12, color="#7a8a9d"))
+        fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
+        return fig, note
     names = [friendly(f) for f in r["fitur"]]
     fig = go.Figure(go.Bar(x=r["importance"], y=names, orientation="h", marker_color=BLUE, text=[fmt(v, 3) for v in r["importance"]],
                            textposition="outside", cliponaxis=False, textfont=dict(size=10, color=INK), customdata=np.stack([[describe(f) for f in r["fitur"]], list(r["fitur"])], axis=-1),
