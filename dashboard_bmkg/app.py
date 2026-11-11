@@ -13,7 +13,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-st.set_page_config(page_title="Dashboard Prakiraan Anomali Suhu Udara Pulau Jawa", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Dashboard Forecast Suhu Jawa", layout="wide", initial_sidebar_state="collapsed")
 
 # ------------------------------------------------------------------ konstanta
 NAVY, BLUE, ORANGE = "#0b2a4a", "#1f6fb5", "#e8710a"
@@ -122,7 +122,7 @@ div[data-testid="stElementContainer"] {margin:0 !important; flex-shrink:0 !impor
 [data-testid="stMarkdown"], [data-testid="stMarkdownContainer"] {margin:0 !important;}
 /* elemen tanpa tinggi (CSS, nav absolut) jangan ikut dihitung gap */
 div[data-testid="stElementContainer"]:has(> [data-testid="stMarkdown"] style) {display:none !important;}
-div[data-testid="stElementContainer"]:has(> .st-key-pgnav) {margin-bottom:calc(-1*var(--gap)) !important; height:0 !important; min-height:0 !important;}
+div[data-testid="stElementContainer"]:has(> .st-key-pgnav), [data-testid="stLayoutWrapper"]:has(> .st-key-pgnav) {margin-bottom:-6px !important; margin-top:0 !important; height:0 !important; min-height:0 !important;}
 [data-testid="stMarkdownContainer"] p {margin:0 !important;}
 /* header */
 .hdr {margin:0 -.6rem; height:var(--hdr); background:#fff; color:§NAVY; display:flex; align-items:center; gap:10px; padding:0 .6rem; border-bottom:3px solid §ORANGE; box-sizing:border-box; box-shadow:0 1px 6px rgba(11,42,74,.10);}
@@ -138,16 +138,26 @@ div[data-testid="stElementContainer"]:has(> .st-key-pgnav) {margin-bottom:calc(-
 [data-testid="stMainBlockContainer"] {position:relative !important;}
 .hdr .pgl {display:none !important;}
 .st-key-pgnav {position:absolute !important; top:14px; right:calc(.6rem + 225px); width:140px; z-index:999990; height:26px; gap:0 !important;}
-.st-key-pgnav [data-testid="stSelectbox"] > div, .st-key-pgnav [data-testid="stSelectbox"] div[role="group"], .st-key-pgnav [data-baseweb="select"] > div {min-height:26px !important; height:26px !important; background:#fff !important; border-color:#d3dde9 !important; border-radius:6px !important;}
-.st-key-pgnav input, .st-key-pgnav button, .st-key-pgnav [data-baseweb="select"] div, .st-key-pgnav [data-baseweb="select"] span {height:24px !important; min-height:0 !important; font-size:12px !important; font-weight:600 !important; color:§NAVY !important; text-align:center; line-height:24px !important; padding-top:0 !important; padding-bottom:0 !important;}
+.st-key-pgnav [data-testid="stSelectbox"] > div, .st-key-pgnav [data-testid="stSelectbox"] div[role="group"], .st-key-pgnav [data-baseweb="select"] > div {min-height:26px !important; height:26px !important; background:§NAVY !important; border-color:§NAVY !important; border-radius:6px !important;}
+.st-key-pgnav input, .st-key-pgnav button, .st-key-pgnav [data-baseweb="select"] div, .st-key-pgnav [data-baseweb="select"] span {height:24px !important; min-height:0 !important; font-size:12px !important; font-weight:600 !important; color:#fff !important; -webkit-text-fill-color:#fff !important; background:transparent !important; text-align:center; line-height:24px !important; padding-top:0 !important; padding-bottom:0 !important;}
 .st-key-pgnav input {text-align:center !important; padding-left:22px !important; caret-color:transparent; cursor:pointer;}
-.st-key-pgnav svg {width:14px !important; height:14px !important;}
+.st-key-pgnav svg {width:14px !important; height:14px !important; fill:#fff !important; color:#fff !important;}
 .blank {height:calc(var(--flt) + var(--kpi) + var(--M) + 2*var(--gap) - 16px); border:2px dashed #b9c7d8; border-radius:10px; display:grid; place-items:center; text-align:center; background:rgba(255,255,255,.4);}
 .blank .bt {font-size:20px; font-weight:700; color:§NAVY;} .blank .bs {font-size:12px; color:#7a8a9d; margin-top:4px;} .hdr .idn {width:210px;}
 /* filter */
-.st-key-filt {height:var(--flt); background:#fff; border:1px solid #dde4ec; border-radius:8px; padding:4px 12px !important; box-sizing:border-box; overflow:hidden; justify-content:center;}
+.st-key-filt {height:var(--flt); background:§NAVY; border:1px solid #0b2a4a; border-radius:8px; padding:4px 12px !important; box-sizing:border-box; overflow:hidden; justify-content:center;}
 .st-key-filt [data-testid="stHorizontalBlock"] {align-items:flex-start;}
 .st-key-filt [data-testid="stColumn"]:nth-child(n+5) {padding-top:16px;}
+/* filter bergaya gelap */
+.st-key-filt label p, .st-key-filt [data-testid="stWidgetLabel"] p, .st-key-filt label {color:#b9cde3 !important;}
+.st-key-filt [data-baseweb="select"] > div, .st-key-filt div[role="group"], .st-key-filt [data-baseweb="input"], .st-key-filt [data-baseweb="base-input"], .st-key-filt [data-testid="stDateInput"] > div > div, .st-key-filt [data-testid="stDateInputField"] {background:#15395f !important; border-color:rgba(255,255,255,.22) !important; color:#fff !important;}
+.st-key-filt input, .st-key-filt [data-baseweb="select"] div, .st-key-filt [data-baseweb="select"] span, .st-key-filt div[role="combobox"] {color:#fff !important; -webkit-text-fill-color:#fff !important;}
+.st-key-filt svg {fill:#fff !important; color:#fff !important;}
+.st-key-filt .stButton button, .st-key-filt [data-testid="stPopover"] > button, .st-key-filt [data-testid="stPopoverButton"], .st-key-filt button {background:transparent !important; color:#fff !important; border:1px solid rgba(255,255,255,.55) !important;}
+.st-key-filt button *, .st-key-filt [data-testid="stDateInput"] *, .st-key-filt [data-testid="stDateInputField"] * {color:#fff !important; -webkit-text-fill-color:#fff !important;}
+.st-key-filt [data-testid="stWidgetLabel"], .st-key-filt [data-testid="stWidgetLabel"] * {color:#b9cde3 !important; -webkit-text-fill-color:#b9cde3 !important; font-weight:600 !important;}
+.st-key-filt [data-baseweb="select"] button, .st-key-filt div[role="group"] button {border:0 !important; background:transparent !important;}
+.st-key-filt .stButton button:hover, .st-key-filt [data-testid="stPopover"] > button:hover, .st-key-filt button:hover {background:rgba(255,255,255,.12) !important;}
 [data-testid="stSelectbox"] *, [data-testid="stDateInput"] * {font-size:12px !important;}
 [data-testid="stWidgetLabel"] p {font-size:10px !important; color:#7a8a9d; text-transform:uppercase; letter-spacing:.4px; font-weight:600;}
 [data-testid="stWidgetLabel"] {min-height:0 !important; margin:0 0 2px 0 !important; height:auto !important;}
@@ -186,6 +196,10 @@ div[data-baseweb="select"] *, [data-testid="stDateInput"] input {font-size:12px 
 .st-key-tsHead [data-testid="stButtonGroup"] button, .st-key-tsHead [data-baseweb="button-group"] button {min-height:24px !important; height:26px !important; padding:0 10px !important;}
 .st-key-tsHead [data-testid="stButtonGroup"] button p, .st-key-tsHead [data-testid="stButtonGroup"] button div, .st-key-tsHead label p {font-size:11px !important;}
 .st-key-tsHead {height:30px; flex:0 0 auto !important;}
+.st-key-tsHead button {background:§NAVY !important; border:1px solid §NAVY !important;}
+.st-key-tsHead button p, .st-key-tsHead button div, .st-key-tsHead button span {color:#fff !important;}
+.st-key-tsHead button[aria-checked="true"], .st-key-tsHead button[aria-pressed="true"], .st-key-tsHead button[data-testid="stBaseButton-segmented_controlActive"] {background:§BLUE !important; border-color:§BLUE !important;}
+.st-key-tsHead label p {color:§NAVY !important;}
 .st-key-tsHead [data-testid="stHorizontalBlock"] {align-items:center; padding-right:4px;}
 .st-key-tsHead [data-testid="stHorizontalBlock"] > div:last-child {display:flex; justify-content:flex-end;}
 .st-key-tsHead [data-testid="stHorizontalBlock"] > div:last-child > div {width:auto !important;}
@@ -303,7 +317,7 @@ def reset_all():
 # ------------------------------------------------------------------ header (identitas bisa diubah di sini)
 # Satu halaman = satu orang. Ganti judul, nama, dan unit tiap halaman di sini (nama di header ikut berubah per halaman).
 PAGES = {
-    "1": {"judul": "Dashboard utama", "nama": "Abie Septian Wibowo", "unit": "Statistika dan Sains Data · IPB"},
+    "1": {"judul": "Dashboard utama", "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
     "2": {"judul": "Halaman 2", "nama": "Nama Teman 2", "unit": "Magang BMKG · IPB"},
     "3": {"judul": "Halaman 3", "nama": "Nama Teman 3", "unit": "Magang BMKG · IPB"},
     "4": {"judul": "Halaman 4", "nama": "Nama Teman 4", "unit": "Magang BMKG · IPB"},
@@ -323,8 +337,8 @@ PAGE = SS.get("page") or "1"   # nilai pilihan halaman (widget-nya dibuat setela
 ID = PAGES[PAGE]
 st.markdown(
     f"""<div class="hdr">{_logo("logo_bmkg", "logo<br>BMKG")}{_logo("logo_ipb", "logo<br>IPB")}
-<div class="ttl"><h1>Dashboard Prakiraan Anomali Suhu Udara Pulau Jawa</h1>
-<div class="sub">Prakiraan anomali suhu udara 6 provinsi di Jawa dengan Gradient Boosting, ERA5, dan Niño 3.4</div></div>
+<div class="ttl"><h1>Dashboard Forecast Suhu Udara Pulau Jawa</h1>
+<div class="sub">Pemantauan t2m, anomali, dan performa model ML untuk 6 provinsi, ERA5 + Niño 3.4</div></div>
 <div class="bx pg"><span class="pgl">Halaman</span></div><div class="bx idn"><b>{ID["nama"]}</b><br>{ID["unit"]}</div></div>""",
     unsafe_allow_html=True,
 )
