@@ -107,7 +107,7 @@ def _h(key, expr):
 _CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-:root{--hdr:56px; --flt:80px; --kpi:72px; --ftr:32px; --gap:8px;
+:root{--hdr:68px; --flt:80px; --kpi:72px; --ftr:32px; --gap:8px;
   --M:max(440px, calc(100vh - var(--hdr) - var(--flt) - var(--kpi) - var(--ftr) - 5*var(--gap) - 8px));
   --A:calc(var(--M) - 40px); --Tt:calc(var(--A)*.555); --Tb:calc(var(--A)*.445); --Rt:calc(var(--A)*.48); --Rb:calc(var(--A)*.52);}
 header[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], footer, #MainMenu {display:none !important;}
