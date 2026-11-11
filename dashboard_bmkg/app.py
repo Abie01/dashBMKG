@@ -17,7 +17,7 @@ st.set_page_config(page_title="Dashboard Forecast Suhu Jawa", layout="wide", ini
 
 # ------------------------------------------------------------------ konstanta
 NAVY, BLUE, ORANGE = "#0b2a4a", "#1f6fb5", "#e8710a"
-BLUE_LINE, GRID, INK, INK2, ZERO = "#9db4cc", "#e6ebf1", "#10243b", "#44566c", "#8793a3"
+BLUE_LINE, GRID, INK, INK2, ZERO = "#9db4cc", "#e6ebf1", "#10243b", "#4a5b70", "#8793a3"
 BLN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
 TEAL = "#0f8b8d"   # warna khusus forecast (oranye = anomali positif)
 GLOSS = {
@@ -33,9 +33,12 @@ GLOSS = {
     "Anomali": "Selisih suhu terhadap normal bulanan (rata-rata 30 tahun). Positif = lebih hangat dari normal. Berbeda dari error model.",
     "Lag": "Nilai variabel pada beberapa bulan sebelum bulan input (lag 1 = 1 bulan sebelumnya).",
     "ERA5": "Reanalisis ERA5 (ECMWF): gabungan model cuaca dan pengamatan; bukan pengamatan stasiun langsung.",
-    "Nino": "Indeks Niño 3.4: anomali suhu laut di Pasifik tengah (HadISST1.1). Observasi = data terakhir tersedia; Skenario IRI = plume prakiraan IRI/CCSR (Gabungan) yang dipakai model untuk bulan ke depan. Basis klimatologi mengikuti sumber masing-masing, belum diselaraskan.",
     "Importance": "Kenaikan RMSE saat sebuah fitur diacak. Menunjukkan seberapa dipakai model, bukan hubungan sebab-akibat.",
 }
+
+
+GLOSS["Niño34"] = ("Niño 3.4 bulan target adalah skenario dari plume IRI/CCSR, bukan observasi. Indeks konvensional "
+                   "(basis 1991–2020) lebih tinggi daripada indeks relatif; samakan definisinya dengan data latih.")
 
 
 def tip(txt, key=None):
@@ -107,7 +110,7 @@ def _h(key, expr):
 _CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-:root{--hdr:56px; --flt:80px; --kpi:72px; --ftr:32px; --gap:8px;
+:root{--hdr:64px; --flt:80px; --kpi:94px; --ftr:32px; --gap:8px;
   --M:max(440px, calc(100vh - var(--hdr) - var(--flt) - var(--kpi) - var(--ftr) - 5*var(--gap) - 8px));
   --A:calc(var(--M) - 40px); --Tt:calc(var(--A)*.555); --Tb:calc(var(--A)*.445); --Rt:calc(var(--A)*.48); --Rb:calc(var(--A)*.52);}
 header[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], footer, #MainMenu {display:none !important;}
@@ -127,40 +130,31 @@ div[data-testid="stElementContainer"]:has(> .st-key-pgnav), [data-testid="stLayo
 [data-testid="stMarkdownContainer"] p {margin:0 !important;}
 /* header */
 .hdr {margin:0 -.6rem; height:var(--hdr); background:#fff; color:§NAVY; display:flex; align-items:center; gap:10px; padding:0 .6rem; border-bottom:3px solid §ORANGE; box-sizing:border-box; box-shadow:0 1px 6px rgba(11,42,74,.10);}
-.hdr .lg {width:38px;height:38px;flex:none;border-radius:8px;background:transparent;padding:1px;box-sizing:border-box;color:§NAVY;display:grid;place-items:center;font-weight:800;font-size:9px;text-align:center;line-height:1.1;overflow:hidden;}
+.hdr .lg {width:50px;height:50px;padding:3px;box-sizing:border-box;flex:none;border-radius:8px;background:transparent;color:§NAVY;display:grid;place-items:center;font-weight:800;font-size:9px;text-align:center;line-height:1.1;overflow:hidden;}
 .hdr .lg img {width:100%;height:100%;object-fit:contain;}
 .hdr .ttl {flex:1; text-align:center; min-width:0;}
-.hdr h1 {font-size:18px; margin:0; padding:0; font-weight:700; color:§NAVY; line-height:1.15; letter-spacing:.2px;}
-.hdr .sub {font-size:11px; color:#5b6b7f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.hdr h1 {font-size:20px; margin:0; padding:0; font-weight:700; color:§NAVY; line-height:1.15; letter-spacing:.2px;}
+.hdr .sub {font-size:11.5px; color:#5b6b7f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .hdr .bx {flex:none; border:1px solid #d3dde9; border-radius:8px; padding:3px 12px; font-size:11px; line-height:1.25; text-align:center; color:#41546b; background:#f4f7fb;}
 .hdr .bx b {color:§NAVY; font-size:12px;}
 .hdr .pg {width:150px; height:38px; box-sizing:border-box; position:relative;}
-.hdr .pgl {position:absolute; top:2px; left:0; right:0; font-size:9.5px; text-transform:uppercase; letter-spacing:.6px; color:#5b6b7f;}
+.hdr .pgl {position:absolute; top:2px; left:0; right:0; font-size:9.5px; text-transform:uppercase; letter-spacing:.6px; color:#7a8a9d;}
 [data-testid="stMainBlockContainer"] {position:relative !important;}
 .hdr .pgl {display:none !important;}
-.st-key-pgnav {position:absolute !important; top:14px; right:calc(.6rem + 225px); width:140px; z-index:999990; height:26px; gap:0 !important;}
+.st-key-pgnav {position:absolute !important; top:19px; right:calc(.6rem + 225px); width:140px; z-index:999990; height:26px; gap:0 !important;}
 .st-key-pgnav [data-testid="stSelectbox"] > div, .st-key-pgnav [data-testid="stSelectbox"] div[role="group"], .st-key-pgnav [data-baseweb="select"] > div {min-height:26px !important; height:26px !important; background:§NAVY !important; border-color:§NAVY !important; border-radius:6px !important;}
 .st-key-pgnav input, .st-key-pgnav button, .st-key-pgnav [data-baseweb="select"] div, .st-key-pgnav [data-baseweb="select"] span {height:24px !important; min-height:0 !important; font-size:12px !important; font-weight:600 !important; color:#fff !important; -webkit-text-fill-color:#fff !important; background:transparent !important; text-align:center; line-height:24px !important; padding-top:0 !important; padding-bottom:0 !important;}
 .st-key-pgnav input {text-align:center !important; padding-left:22px !important; caret-color:transparent; cursor:pointer;}
 .st-key-pgnav svg {width:14px !important; height:14px !important; fill:#fff !important; color:#fff !important;}
 .blank {height:calc(var(--flt) + var(--kpi) + var(--M) + 2*var(--gap) - 16px); border:2px dashed #b9c7d8; border-radius:10px; display:grid; place-items:center; text-align:center; background:rgba(255,255,255,.4);}
-.blank .bt {font-size:20px; font-weight:700; color:§NAVY;} .blank .bs {font-size:12px; color:#5b6b7f; margin-top:4px;} .hdr .idn {width:210px;}
+.blank .bt {font-size:20px; font-weight:700; color:§NAVY;} .blank .bs {font-size:12px; color:#7a8a9d; margin-top:4px;} .hdr .idn {width:210px;}
 /* filter */
-.st-key-filt {position:sticky; top:0; z-index:30; height:var(--flt); background:§NAVY; border:1px solid #0b2a4a; border-radius:10px; padding:4px 12px !important; box-sizing:border-box; overflow:hidden; justify-content:center;}
+.st-key-filt {height:var(--flt); background:#fff; border:1px solid #dde4ec; border-radius:8px; padding:4px 12px !important; box-sizing:border-box; overflow:hidden; justify-content:center;}
 .st-key-filt [data-testid="stHorizontalBlock"] {align-items:flex-start;}
 .st-key-filt [data-testid="stColumn"]:nth-child(n+5) {padding-top:16px;}
-/* filter bergaya gelap */
-.st-key-filt label p, .st-key-filt [data-testid="stWidgetLabel"] p, .st-key-filt label {color:#b9cde3 !important;}
-.st-key-filt [data-baseweb="select"] > div, .st-key-filt div[role="group"], .st-key-filt [data-baseweb="input"], .st-key-filt [data-baseweb="base-input"], .st-key-filt [data-testid="stDateInput"] > div > div, .st-key-filt [data-testid="stDateInputField"] {background:#15395f !important; border-color:rgba(255,255,255,.22) !important; color:#fff !important;}
-.st-key-filt input, .st-key-filt [data-baseweb="select"] div, .st-key-filt [data-baseweb="select"] span, .st-key-filt div[role="combobox"] {color:#fff !important; -webkit-text-fill-color:#fff !important;}
-.st-key-filt svg {fill:#fff !important; color:#fff !important;}
-.st-key-filt .stButton button, .st-key-filt [data-testid="stPopover"] > button, .st-key-filt [data-testid="stPopoverButton"], .st-key-filt button {background:transparent !important; color:#fff !important; border:1px solid rgba(255,255,255,.55) !important;}
-.st-key-filt button *, .st-key-filt [data-testid="stDateInput"] *, .st-key-filt [data-testid="stDateInputField"] * {color:#fff !important; -webkit-text-fill-color:#fff !important;}
-.st-key-filt [data-testid="stWidgetLabel"], .st-key-filt [data-testid="stWidgetLabel"] * {color:#b9cde3 !important; -webkit-text-fill-color:#b9cde3 !important; font-weight:600 !important;}
 .st-key-filt [data-baseweb="select"] button, .st-key-filt div[role="group"] button {border:0 !important; background:transparent !important;}
-.st-key-filt .stButton button:hover, .st-key-filt [data-testid="stPopover"] > button:hover, .st-key-filt button:hover {background:rgba(255,255,255,.12) !important;}
 [data-testid="stSelectbox"] *, [data-testid="stDateInput"] * {font-size:12px !important;}
-[data-testid="stWidgetLabel"] p {font-size:10.5px !important; color:#5b6b7f; text-transform:uppercase; letter-spacing:.4px; font-weight:600;}
+[data-testid="stWidgetLabel"] p {font-size:11px !important; color:#5b6b7f; letter-spacing:0; font-weight:600;}
 [data-testid="stWidgetLabel"] {min-height:0 !important; margin:0 0 2px 0 !important; height:auto !important;}
 div[data-baseweb="select"] {min-height:30px !important;}
 div[data-baseweb="select"] > div, div[data-baseweb="input"], div[data-baseweb="base-input"], [data-testid="stDateInputField"] {background:#fff !important; color:§INK !important; border-radius:6px !important; min-height:30px !important; height:30px !important;}
@@ -172,26 +166,24 @@ div[data-baseweb="select"] *, [data-testid="stDateInput"] input {font-size:12px 
 .stButton button p, [data-testid="stPopover"] button p {color:§BLUE !important; font-size:12px !important;}
 /* KPI */
 .kpis {display:grid; grid-template-columns:repeat(5,1fr) 1.15fr; gap:var(--gap); height:var(--kpi);}
-.kpi {background:#fff;border:1px solid #dde4ec;border-top:3px solid #c5d3e2;border-radius:10px;padding:4px 11px;min-width:0;overflow:hidden;box-sizing:border-box;box-shadow:0 1px 2px rgba(11,42,74,.06);font-variant-numeric:tabular-nums;}
-.kpi.key {background:#f0f8f8;border-color:#bfe0e0;border-top-color:§TEAL;}
-.kpi.key.hot {background:#fff6ec;border-color:#f3d4b0;border-top-color:§ORANGE;}
-.kpi .l {font-size:11px;color:§INK2;font-weight:600;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.kpi .v {font-size:20px;font-weight:700;line-height:1.2;color:§INK;white-space:nowrap;}
-.kpi.key .v {font-size:24px;line-height:1.1;}
+.kpi {background:#fff;border:1px solid #dde4ec;border-top:3px solid §NAVY;border-radius:8px;padding:5px 12px;min-width:0;overflow:hidden;box-sizing:border-box;}
+.kpi.acc {border-top-color:§TEAL;}
+.kpi .l {font-size:11.5px;color:§INK2;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi .v {font-size:23px;font-weight:700;line-height:1.2;color:§INK;white-space:nowrap;}
 .kpi .v small {font-size:12px;font-weight:600;color:§INK2;}
-.kpi .s {font-size:11px;line-height:1.3;color:§INK2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tp {border-bottom:1px dotted #5b6b7f; cursor:help;}
+.kpi .s {font-size:11px;line-height:1.25;color:§INK2;white-space:normal;max-height:28px;overflow:hidden;}
+.tp {border-bottom:1px dotted #7a8a9d; cursor:help;}
 .kpi .l .tp {border-bottom:none;}
 .pos {color:§ORANGE;} .neg {color:§BLUE;}
-.chip {display:inline-block;font-size:10.5px;font-weight:700;padding:0 6px;border-radius:9px;vertical-align:middle;margin-left:4px;}
-.chip.pos {background:#fdebd9;} .chip.neg {background:#dbe8f5;} .chip.obs {background:#e3eaf3;color:#0b2a4a;margin:0 4px 0 0;} .chip.sk {background:#d9eeee;color:#0a6a6c;}
+.chip {display:inline-block;font-size:10px;font-weight:700;padding:0 6px;border-radius:9px;vertical-align:middle;margin-left:4px;}
+.chip.pos {background:#fdebd9;} .chip.neg {background:#dbe8f5;}
 /* seksi */
 .st-key-main {height:var(--M);}
 .st-key-secL, .st-key-secR {height:var(--M); border:0; padding:0 !important; box-sizing:border-box; overflow:hidden; background:transparent;}
-.sec {height:24px; line-height:22px; font-size:13px; font-weight:700; color:§NAVY; text-align:left; padding-left:2px; letter-spacing:.3px; text-transform:uppercase;}
-.sec span {font-weight:500; color:#5b6b7f; text-transform:none; letter-spacing:0; margin-left:8px; font-size:11px;}
+.sec {height:24px; line-height:22px; font-size:14px; font-weight:700; color:§NAVY; text-align:left; padding-left:2px; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.sec span {font-weight:500; color:§INK2; text-transform:none; letter-spacing:0; margin-left:10px; font-size:12px;}
 .st-key-tsCard > *, .st-key-mapCard > *, .st-key-anCard > *, .st-key-fiCard > *, .st-key-evCard > * {flex-shrink:0 !important;}
-.st-key-tsCard, .st-key-mapCard, .st-key-anCard, .st-key-fiCard, .st-key-evCard {background:#fff; border:1px solid #dde4ec; border-radius:10px; box-shadow:0 1px 2px rgba(11,42,74,.06); overflow:hidden; gap:0 !important; box-sizing:border-box;}
+.st-key-tsCard, .st-key-mapCard, .st-key-anCard, .st-key-fiCard, .st-key-evCard {background:#fff; border:1px solid #dde4ec; border-radius:8px; overflow:hidden; gap:0 !important; box-sizing:border-box;}
 .st-key-tsCard {height:var(--Tt); flex:0 0 auto !important;}
 .st-key-mapCard {height:var(--Rt); flex:0 0 auto !important;}
 .st-key-anCard {height:var(--Rb); flex:0 0 auto !important;}
@@ -211,51 +203,41 @@ div[data-baseweb="select"] *, [data-testid="stDateInput"] input {font-size:12px 
 .st-key-rowL [data-testid="stColumn"] {height:var(--Tb);}
 .st-key-mapHead {height:30px; flex:0 0 auto !important;}
 .st-key-mapHead [data-testid="stHorizontalBlock"] {align-items:center; padding-right:8px;}
-.ct {font-size:12px;font-weight:650;color:§NAVY;padding:6px 10px 0;height:28px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ct span {font-weight:500;color:#44566c;font-size:11px;margin-left:8px;background:#eef2f7;border-radius:10px;padding:1px 8px;}
-.ins {font-size:11.5px;color:§INK2;padding:0 12px;height:20px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;} .ins b {color:§NAVY;}
-.note {font-size:11px;line-height:1.3;color:#5b6b7f;padding:2px 10px 0;height:30px;overflow:hidden;}
-table.ev {border-collapse:collapse;width:100%;font-size:11.5px;font-variant-numeric:tabular-nums;}
-table.ev th {font-size:11px;text-transform:uppercase;color:#5b6b7f;font-weight:600;text-align:right;padding:2px 8px;border-bottom:1px solid #dde4ec;}
+.ct {font-size:13px;font-weight:650;color:§NAVY;padding:6px 10px 0;height:28px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ct span {font-weight:500;color:#5b6b7f;font-size:11px;margin-left:8px;}
+.note {font-size:10.5px;line-height:1.3;color:#5b6b7f;padding:2px 10px 0;height:30px;overflow:hidden;}
+table.ev {border-collapse:collapse;width:100%;font-size:11px;}
+table.ev th {font-size:11px;color:#5b6b7f;font-weight:600;text-align:right;padding:2px 8px;border-bottom:1px solid #dde4ec;}
 table.ev th:first-child, table.ev td:first-child {text-align:left;}
 table.ev td {padding:3px 8px;text-align:right;border-bottom:1px solid #eef2f7;white-space:nowrap;color:§INK;}
 table.ev tr.act td {background:#dbe8f5;font-weight:600;}
-table.ev tr.base td {color:#5b6b7f;font-style:italic;}
+table.ev tr.base td:first-child {color:§INK2;}
 table.ev td.min {color:§ORANGE;font-weight:700;}
 .bar {display:inline-block;height:6px;background:§BLUE;border-radius:3px;vertical-align:middle;margin-right:5px;opacity:.6;}
 .evw {padding:0 8px;}
 .sumw {display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:6px 10px 0;height:58px;box-sizing:border-box;}
 .sum {border-left:3px solid §BLUE;padding-left:7px;min-width:0;overflow:hidden;}
-.sum .l {font-size:10.5px;color:#5b6b7f;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sum .v {font-size:13.5px;font-variant-numeric:tabular-nums;font-weight:700;color:§INK;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
-.sum .s {font-size:11px;color:#44566c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sum .l {font-size:11px;color:#5b6b7f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sum .v {font-size:14px;font-weight:700;color:§INK;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+.sum .s {font-size:11px;color:#4a5b70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* footer */
 .foot {height:var(--ftr); display:grid; grid-template-columns:auto 1fr; gap:var(--gap); box-sizing:border-box;}
-.foot > div {background:#fff; border:1px solid #dde4ec; border-radius:8px; display:flex; align-items:center; padding:0 12px; font-size:11px; color:§INK2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; gap:8px;}
-.foot .pill {background:§NAVY; color:#d7e4f2; padding:3px 10px; border-radius:12px; font-size:11px;}
+.foot > div {background:#fff; border:1px solid #dde4ec; border-radius:8px; display:flex; align-items:center; padding:0 12px; font-size:10.5px; color:§INK2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; gap:8px;}
+.foot .pill {background:§NAVY; color:#d7e4f2; padding:3px 10px; border-radius:12px; font-size:10.5px;}
 .foot .dot {display:inline-block;width:7px;height:7px;border-radius:50%;background:#5ad18f;margin-right:6px;}
 .foot .w {color:#8a4300;}
 @media (max-height: 830px) {
-  table.ev td {padding:1px 8px !important; font-size:11px !important;} table.ev th {padding:1px 8px !important;}
+  table.ev td {padding:1px 8px !important; font-size:10.5px !important;} table.ev th {padding:1px 8px !important;}
   .bar {height:5px;}
 }
-/* responsif */
-@media (max-width: 1200px) {
-  .kpis {grid-template-columns:repeat(3,1fr); height:auto;} .kpi {height:72px;}
-  .st-key-filt {height:auto !important; min-height:var(--flt);}
-}
-@media (max-width: 900px) {
-  .st-key-main, .st-key-secL, .st-key-secR, .st-key-rowL, .st-key-rowL [data-testid="stHorizontalBlock"] {height:auto !important;}
-  .st-key-main [data-testid="stHorizontalBlock"] {flex-direction:column;}
-  .st-key-main [data-testid="stColumn"] {width:100% !important; flex:1 1 auto !important; min-width:0 !important;}
-  .st-key-rowL [data-testid="stColumn"] {height:var(--Tb);}
-  .kpis {grid-template-columns:repeat(2,1fr);}
-}
+.kpi.hero {background:#f0f9f9; border-top-color:§TEAL;}
+.kpi.hero .v {font-size:25px;}
+.kpi .v, .sum .v, table.ev td {font-variant-numeric:tabular-nums;}
 /* tinggi grafik */
 §CHARTS
 </style>
 """
-_CHARTS = (_h("c_temp", "calc(var(--Tt) - 54px)") + _h("c_anom", "calc(var(--Rb) - 30px)") + _h("c_fi", "calc(var(--Tb) - 40px)")
+_CHARTS = (_h("c_temp", "calc(var(--Tt) - 34px)") + _h("c_anom", "calc(var(--Rb) - 30px)") + _h("c_fi", "calc(var(--Tb) - 40px)")
            + _h("map_sel", "calc(var(--Rt) - 30px - 58px - 4px)") + _h("bars", "calc(var(--Rt) - 30px - 58px - 4px)"))
 for _k, _v in {"§NAVY": NAVY, "§BLUE": BLUE, "§ORANGE": ORANGE, "§INK2": INK2, "§INK": INK, "§TEAL": TEAL, "§CHARTS": _CHARTS}.items():
     _CSS = _CSS.replace(_k, _v)
@@ -364,10 +346,9 @@ with st.container(key="pgnav"):
     PAGE = st.selectbox("Halaman", list(PAGES), key="page", label_visibility="collapsed", format_func=lambda k: f"Halaman {k}")
 
 def footer():
-    _full = (f"Eksperimental, bersyarat {NINO_NOTE}; bukan produk operasional BMKG. Anomali terhadap normal {norm_period}. Detail metode dan istilah ada di tombol Catatan.").replace(chr(34), chr(39))
     st.markdown(
         f'<div class="foot"><div>Info data <span class="pill"><span class="dot"></span>Data terakhir: {mon_label(last_obs)} · Forecast s.d. {mon_label(fc_end)}</span></div>'
-        f'<div><b>ERA5</b> · Normal {norm_period} · <span class="w">Eksperimental, bukan produk operasional BMKG</span> · <span class="tp" title="{_full}">Selengkapnya ⓘ</span></div></div>',
+        f'<div><b>ERA5</b> · Normal {norm_period} · <span class="w">Eksperimental · bersyarat skenario Niño 3.4 · bukan produk operasional BMKG</span> · Detail di ⓘ Catatan</div></div>',
         unsafe_allow_html=True,
     )
 
@@ -433,19 +414,14 @@ def fc_for(p):
 def layout(fig, **kw):
     base = dict(separators=",.", font=dict(size=11, color=INK2, family="Poppins, Segoe UI, sans-serif"), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=42, r=12, t=34, b=28), hoverlabel=dict(font_size=11, bgcolor="#fff", font_color=INK),
-                legend=dict(orientation="h", x=0, y=1.0, yanchor="bottom", font=dict(size=11, color=INK2), tracegroupgap=0, itemwidth=30))
+                legend=dict(orientation="h", x=0, y=1, yanchor="bottom", font=dict(size=11, color=INK2), tracegroupgap=0, itemwidth=30))
     base.update(kw)
     fig.update_layout(**base)
     return fig
 
 
-def unit(fig, txt="°C"):
-    fig.add_annotation(xref="paper", yref="paper", x=0, y=1, xanchor="right", yanchor="bottom", text=txt, showarrow=False, xshift=-4, yshift=2,
-                       font=dict(size=11, color=INK2))
-
-
 def axes(fig, x=None, y=None):
-    bx = dict(gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(size=11), showspikes=True, spikemode="across", spikethickness=1, spikecolor="#9aa8b8", spikedash="dot")
+    bx = dict(gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(size=11))
     by = dict(gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(size=11))
     bx.update(x or {})
     by.update(y or {})
@@ -489,26 +465,13 @@ def fig_temp():
         fig.add_scatter(x=f["d"], y=f["hi"], mode="lines", line=dict(width=0), showlegend=False, hoverinfo="skip", legendgroup="ci")
         fig.add_scatter(x=f["d"], y=f["lo"], mode="lines", line=dict(width=0), fill="tonexty", fillcolor="rgba(15,139,141,.16)",
                         name=f"Interval {level}%", legendgroup="ci", hoverinfo="skip")
-        fig.add_scatter(x=f["d"], y=f["p"], mode="lines+markers", name=f"Forecast: {nm}", line=dict(color=TEAL, width=2.6, dash="dash"),
-                        marker=dict(size=6, color=TEAL), customdata=np.stack([f["lo"], f["hi"], f["a"]], axis=-1),
+        fig.add_scatter(x=f["d"], y=f["p"], mode="lines+markers", name=f"Forecast: {nm}", line=dict(color=TEAL, width=2, dash="dash"),
+                        marker=dict(size=5, color=TEAL), customdata=np.stack([f["lo"], f["hi"], f["a"]], axis=-1),
                         hovertemplate=(f"<b>{nm}</b><br>Forecast: %{{y:.2f}} °C · anomali %{{customdata[2]:+.2f}} °C"
                                        f"<br>Interval {level}%: %{{customdata[0]:.2f}} – %{{customdata[1]:.2f}} °C<extra></extra>"))
-    divider(fig, bottom=True)
-    vals = [v for v in list(o["t"]) + list(o["n"]) + (list(f["hi"]) + list(f["lo"]) if len(f) else []) if pd.notna(v)]
-    yr = None
-    if vals:
-        lo_v, hi_v = min(vals), max(vals); rg = max(hi_v - lo_v, .5)
-        yr = [lo_v - .04 * rg, hi_v + .16 * rg]
-    if len(o):
-        fig.add_annotation(x=o["d"].iloc[-1], y=o["t"].iloc[-1], text=f"ERA5 terakhir<br><b>{fmt(o['t'].iloc[-1])} °C</b>", showarrow=True, arrowhead=2, arrowsize=.9,
-                           arrowwidth=1, arrowcolor=NAVY, ax=-44, ay=-30, font=dict(size=11, color=NAVY), bgcolor="rgba(255,255,255,.85)", borderpad=2)
-    if len(f):
-        pr = f.loc[f["p"].idxmax()]
-        fig.add_annotation(x=pr["d"], y=pr["p"], text=f"Suhu tertinggi {mon_label(pr['d'])}<br><b>{fmt(pr['p'])} °C</b>", showarrow=True, arrowhead=2, arrowsize=.9,
-                           arrowwidth=1, arrowcolor=TEAL, ax=0, ay=-34, font=dict(size=11, color=TEAL), bgcolor="rgba(255,255,255,.85)", borderpad=2)
-    layout(fig, hovermode="x unified", margin=dict(l=42, r=12, t=34, b=28))
-    axes(fig, x=dict(range=[d0, d1]), y=dict(range=yr) if yr else {})
-    unit(fig)
+    divider(fig)
+    layout(fig, hovermode="x unified", margin=dict(l=42, r=12, t=40, b=28))
+    axes(fig, x=dict(range=[d0, d1]), y=dict(title=dict(text="°C", standoff=4)))
     return fig, nm
 
 
@@ -534,10 +497,9 @@ def fig_back():
     if len(gb):
         fig.add_scatter(x=gb["tanggal_target"], y=gb["prediksi"], mode="lines", name="Persistence (suhu bulan lalu)", line=dict(color=ZERO, width=1.4, dash="dot"),
                         hovertemplate="Persistence: %{y:.2f} °C<extra></extra>")
-    layout(fig, hovermode="x unified", margin=dict(l=42, r=12, t=34, b=28))
+    layout(fig, hovermode="x unified", margin=dict(l=42, r=12, t=40, b=28))
     tv = list(ga["tanggal_target"])[::2]
-    axes(fig, x=dict(tickmode="array", tickvals=tv, ticktext=[f"{BLN[t.month - 1]} {t.year}" for t in tv]))
-    unit(fig)
+    axes(fig, x=dict(tickmode="array", tickvals=tv, ticktext=[f"{BLN[t.month - 1]} {t.year}" for t in tv]), y=dict(title=dict(text="°C", standoff=4)))
     return fig, nm, info
 
 
@@ -556,23 +518,17 @@ def fig_anom():
 
     bars(o, True, "ERA5, positif")
     bars(o, False, "ERA5, negatif")
-    if len(f):
-        fig.add_scatter(x=f["d"], y=f["ahi"], mode="lines", line=dict(width=0), showlegend=False, hoverinfo="skip", legendgroup="ci")
-        fig.add_scatter(x=f["d"], y=f["alo"], mode="lines", line=dict(width=0), fill="tonexty", fillcolor="rgba(15,139,141,.22)",
-                        name=f"Interval {level}%", legendgroup="ci", hoverinfo="skip")
-        fig.add_scatter(x=f["d"], y=f["a"], mode="lines+markers", name="Forecast", line=dict(color=TEAL, width=1.6), marker=dict(color=TEAL, size=5),
-                        customdata=np.stack([f["alo"], f["ahi"]], axis=-1),
-                        hovertemplate=(f"<b>{nm}</b><br>Forecast: anomali %{{y:+.2f}} °C<br>Interval {level}%: "
-                                       "%{customdata[0]:+.2f} – %{customdata[1]:+.2f} °C<extra></extra>"))
+    fig.add_scatter(x=f["d"], y=f["a"], mode="lines+markers", name=f"Forecast (± interval {level}%)",
+                    line=dict(color=TEAL, width=1.6), marker=dict(color=TEAL, size=5, line=dict(color="#fff", width=1)),
+                    error_y=dict(type="data", symmetric=False, array=(f["ahi"] - f["a"]).values, arrayminus=(f["a"] - f["alo"]).values,
+                                 color="rgba(15,139,141,.5)", thickness=1, width=2),
+                    customdata=np.stack([f["alo"], f["ahi"]], axis=-1),
+                    hovertemplate=(f"<b>{nm}</b><br>Forecast: anomali %{{y:+.2f}} °C<br>Interval {level}%: "
+                                   "%{customdata[0]:+.2f} – %{customdata[1]:+.2f} °C<extra></extra>"))
     divider(fig, bottom=True)
-    layout(fig, barmode="overlay", bargap=.15, hovermode="x unified", margin=dict(l=42, r=12, t=34, b=28))
-    amax = max([abs(v) for v in list(o["a"]) + (list(f["ahi"]) + list(f["alo"]) if len(f) else []) if pd.notna(v)] + [.5])
-    step = .5 if amax <= 1.6 else 1
-    _k = int(np.ceil(amax / step))
-    _tv = [round(i * step, 2) for i in range(-_k, _k + 1)]
-    axes(fig, x=dict(range=[d0, d1]), y=dict(tickmode="array", tickvals=_tv, ticktext=[("0" if v == 0 else fmt(v, 1, True)) for v in _tv],
-                                             zeroline=True, zerolinecolor="#44566c", zerolinewidth=1.4))
-    unit(fig)
+    fig.add_hline(y=0, line=dict(color=ZERO, width=1))
+    layout(fig, barmode="overlay", bargap=.15, hovermode="x unified", margin=dict(l=42, r=12, t=40, b=28))
+    axes(fig, x=dict(range=[d0, d1]), y=dict(title=dict(text="°C", standoff=4)))
     return fig, nm
 
 
@@ -602,15 +558,16 @@ def fig_fi():
     r = r.sort_values("importance", ascending=False).head(8).iloc[::-1]
     if not len(r):
         fig = go.Figure(); layout(fig, margin=dict(l=8, r=8, t=6, b=8), showlegend=False)
-        fig.add_annotation(text="Importance belum tersedia untuk kombinasi ini", xref="paper", yref="paper", x=.5, y=.5, showarrow=False, font=dict(size=12, color="#5b6b7f"))
+        fig.add_annotation(text="Importance belum tersedia untuk kombinasi ini", xref="paper", yref="paper", x=.5, y=.5, showarrow=False, font=dict(size=12, color="#7a8a9d"))
         fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
         return fig, note
     names = [friendly(f) for f in r["fitur"]]
-    fig = go.Figure(go.Bar(x=r["importance"], y=names, orientation="h", marker_color=["#8fa6bf"] * (len(r) - 1) + [NAVY], text=[fmt(v, 3) for v in r["importance"]],
-                           textposition="outside", constraintext="none", cliponaxis=False, textfont=dict(size=11.5, color=INK), customdata=np.stack([[describe(f) for f in r["fitur"]], list(r["fitur"])], axis=-1),
+    fig = go.Figure(go.Bar(x=r["importance"], y=names, orientation="h", marker_color=[NAVY if i == len(r) - 1 else "#8aa3bd" for i in range(len(r))], text=[fmt(v, 3) for v in r["importance"]],
+                           textposition="outside", cliponaxis=False, textfont=dict(size=11, color=INK), customdata=np.stack([[describe(f) for f in r["fitur"]], list(r["fitur"])], axis=-1),
                            hovertemplate="<b>%{y}</b> (%{customdata[1]})<br>Importance: %{x:.4f}<br>%{customdata[0]}<extra></extra>"))
-    layout(fig, margin=dict(l=8, r=48, t=6, b=22), showlegend=False, bargap=.32)
-    axes(fig, x=dict(                     range=[0, (r["importance"].max() if len(r) else 1) * 1.3]),
+    layout(fig, margin=dict(l=8, r=44, t=6, b=28), showlegend=False)
+    axes(fig, x=dict(title=dict(text="Kenaikan RMSE bila fitur diacak (°C)", font=dict(size=10), standoff=2),
+                     range=[0, (r["importance"].max() if len(r) else 1) * 1.3]),
          y=dict(automargin=True, gridcolor="rgba(0,0,0,0)", tickmode="array", tickvals=names, ticktext=names, tickfont=dict(size=11, color=INK)))
     return fig, note
 
@@ -765,20 +722,17 @@ def fig_map(s, metric):
                             marker=dict(size=9, color=f"rgba({rgb[0]},{rgb[1]},{rgb[2]},{.25 if dim else 1})",
                                         line=dict(color=NAVY if prov == f["prov"] else "#fff", width=1.2)))
 
-    off = {"Jakarta": (-8, -34), "Banten": (-46, 16), "Yogyakarta": (8, 22)}
-
     def _lab(f):
         n = lbl.get(f["prov"], pl(f["prov"]))
         if prov != "ALL" and prov != f["prov"]:
             return n  # provinsi lain: angka disembunyikan, nama dipudarkan
         return f"{n}<br><b>{fmt(mv[f['prov']]['v'], 2, True)}</b>"
-    for f in feats:
-        faded = prov != "ALL" and prov != f["prov"]
-        ox, oy = off.get(f["prov"], (0, 0))
-        fig.add_annotation(x=f["c"][0], y=f["c"][1], text=_lab(f), showarrow=bool(ox or oy), ax=ox, ay=oy, arrowhead=0, arrowwidth=.8,
-                           arrowcolor="#5b6b7f", standoff=3, startstandoff=1, align="center", captureevents=False,
-                           font=dict(size=11 if prov == f["prov"] else 10.5, color="#a8b3c0" if faded else INK),
-                           bgcolor="rgba(255,255,255,.72)" if (ox or oy) and not faded else None, borderpad=1)
+    fig.add_scatter(x=[f["c"][0] for f in feats], y=[f["c"][1] for f in feats], mode="text",
+                    text=[_lab(f) for f in feats], cliponaxis=False,
+                    textposition=[pos.get(f["prov"], "middle center") for f in feats],
+                    textfont=dict(size=[(11 if prov == f["prov"] else 9) for f in feats],
+                                  color=["#b4bfcc" if (prov != "ALL" and prov != f["prov"]) else INK for f in feats]),
+                    hoverinfo="skip", showlegend=False)
     # titik klik tak terlihat yang menutupi seluruh provinsi (untuk lintas-filter lewat klik)
     px = [v for f in feats for v in f["pts"][0]]
     py = [v for f in feats for v in f["pts"][1]]
@@ -790,11 +744,11 @@ def fig_map(s, metric):
     x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
     fig.add_scatter(x=[x0], y=[y0], mode="markers", hoverinfo="skip", showlegend=False,
                     marker=dict(size=.1, color=[cmin], cmin=cmin, cmax=cmax, colorscale=stops, showscale=True,
-                                colorbar=dict(thickness=8, len=.85, tickfont=dict(size=10.5), title=dict(text="Anomali, °C", side="right", font=dict(size=10.5, color=INK2)), outlinewidth=0, tickformat="+.2f", x=1.0, xpad=0,
+                                colorbar=dict(thickness=8, len=.8, title=dict(text="°C", side="top", font=dict(size=10)), tickfont=dict(size=10), outlinewidth=0, tickformat="+.2f", x=1.0, xpad=0,
                                               tickvals=[round(v, 2) for v in np.linspace(cmin, cmax, 5)])))
-    layout(fig, margin=dict(l=2, r=64, t=2, b=2), showlegend=False, hovermode="closest", dragmode=False,
-           clickmode="event+select", xaxis=dict(visible=False, range=[x0 - (x1 - x0) * .09, x1 + (x1 - x0) * .03], constrain="domain", fixedrange=True),
-           yaxis=dict(visible=False, range=[y0 - (y1 - y0) * .17, y1 + (y1 - y0) * .16], scaleanchor="x", scaleratio=1, constrain="domain", fixedrange=True))
+    layout(fig, margin=dict(l=2, r=44, t=2, b=2), showlegend=False, hovermode="closest", dragmode=False,
+           clickmode="event+select", xaxis=dict(visible=False, range=[x0 - (x1 - x0) * .03, x1 + (x1 - x0) * .03], constrain="domain", fixedrange=True),
+           yaxis=dict(visible=False, range=[y0 - (y1 - y0) * .16, y1 + (y1 - y0) * .22], scaleanchor="x", scaleratio=1, constrain="domain", fixedrange=True))
     return fig
 
 
@@ -803,7 +757,7 @@ def fig_bars(s):
     fig = go.Figure(go.Bar(x=s["mean"], y=[pl(p) for p in s["prov"]], orientation="h",
                            marker=dict(color=[ORANGE if v >= 0 else BLUE for v in s["mean"]],
                                        opacity=[1 if prov in ("ALL", p) else .35 for p in s["prov"]]),
-                           text=[fmt(v, 2, True) for v in s["mean"]], textposition="outside", constraintext="none", cliponaxis=False, textfont=dict(size=10)))
+                           text=[fmt(v, 2, True) for v in s["mean"]], textposition="outside", cliponaxis=False, textfont=dict(size=10)))
     layout(fig, margin=dict(l=84, r=42, t=4, b=24), showlegend=False)
     axes(fig, x=dict(title=dict(text="Anomali rata-rata forecast (°C)", font=dict(size=10), standoff=2), zeroline=True, zerolinecolor=ZERO),
          y=dict(automargin=True, gridcolor="rgba(0,0,0,0)"))
@@ -835,22 +789,22 @@ else:
     nino_ref = NINO_ASUMSI
 cards = [
     ("", f"ERA5 terakhir · {mon_label(last['tanggal'])}" + I("ERA5"), f'{fmt(last["t2m"])} <small>°C</small>',
-     f'Anomali <b class="{sg(last["anomali"])}">{fmt(last["anomali"], 2, True)} °C</b> vs normal {norm_period}'),
-    ("key", f"Forecast {mon_label(ref)}" + (" (bulan ini)" if not BULAN_ACUAN and ref == _ref else ""), f'{fmt(fr["p"])} <small>°C</small>',
-     f'Anomali <b class="{sg(fr["a"])}">{fmt(fr["a"], 2, True)} °C</b> · {h_ref} bln setelah data terakhir'),
-    ("", "Rerata anomali 12 bulan", f'<span class="{sg(f_nat["a"].mean())}">{fmt(f_nat["a"].mean(), 2, True)}</span> <small>°C</small>{chip(f_nat["a"].mean())}',
-     f'{mon_label(f_nat["d"].iloc[0])} – {mon_label(f_nat["d"].iloc[-1])} · suhu {fmt(f_nat["p"].mean())} °C'),
-    ("key hot", "Puncak anomali forecast", f'<span class="{sg(pk["a"])}">{fmt(pk["a"], 2, True)}</span> <small>°C</small>',
-     f'{mon_label(pk["d"])} · suhu {fmt(pk["p"])} °C'),
+     f'Anomali <b class="{sg(last["anomali"])}">{fmt(last["anomali"], 2, True)} °C</b> terhadap normal {norm_period} · rata-rata 6 prov.'),
+    ("acc hero", f"Forecast {mon_label(ref)}" + (" (bulan ini)" if not BULAN_ACUAN and ref == _ref else ""), f'{fmt(fr["p"])} <small>°C</small>',
+     f'Anomali <b class="{sg(fr["a"])}">{fmt(fr["a"], 2, True)} °C</b> · {h_ref} bln setelah data terakhir · rata-rata 6 prov.'),
+    ("acc", "Rerata anomali 12 bulan", f'<span class="{sg(f_nat["a"].mean())}">{fmt(f_nat["a"].mean(), 2, True)}</span> <small>°C</small>{chip(f_nat["a"].mean())}',
+     f'{mon_label(f_nat["d"].iloc[0])} – {mon_label(f_nat["d"].iloc[-1])} · suhu rerata {fmt(f_nat["p"].mean())} °C · rata-rata 6 prov.'),
+    ("acc hero", "Puncak anomali forecast", f'<span class="{sg(pk["a"])}">{fmt(pk["a"], 2, True)}</span> <small>°C</small>',
+     f'{mon_label(pk["d"])} · suhu {fmt(pk["p"])} °C · rata-rata 6 prov.'),
     ("", "Model terbaik (RMSE)" + I("RMSE"), f'{fmt(best["RMSE"], 3)} <small>°C</small>',
-     f'{best["pendekatan"]} · {str(best["model"]).replace("HistGradientBoosting", "HGB")} · unggul {fmt(second["RMSE"] - best["RMSE"], 3)} °C dari #2'),
+     f'{best["pendekatan"]} · {str(best["model"]).replace("HistGradientBoosting", "HGB")} · selisih ke peringkat 2: {fmt(second["RMSE"] - best["RMSE"], 3)} °C'),
 ]
 if nino_ref is not None and D["nsk"] is not None:
-    cards.append(("", f"Niño 3.4 · {mon_label(ref)}" + I("Nino"), f'{fmt(nino_ref)} <small>°C</small><span class="chip sk">Skenario IRI</span>',
-                  f'<span class="chip obs">Observasi</span>{mon_label(nn["tanggal"])}: {fmt(nn["nino34"])} °C · {nn["fase"]}'))
+    cards.append(("acc", f"Niño 3.4 · {mon_label(ref)}" + I("Niño34"), f'{fmt(nino_ref)} <small>°C · skenario</small>',
+                  f'Plume IRI · data terakhir {mon_label(nn["tanggal"])}: {fmt(nn["nino34"])} °C ({nn["fase"]})'))
 else:
-    cards.append(("", "Niño 3.4 terakhir dan fase" + I("Nino"), f'{fmt(nn["nino34"])} <small>°C · {nn["fase"]}</small>',
-                  f'<span class="chip obs">Observasi</span>{mon_label(nn["tanggal"])} · forecast: {NINO_TXT}'))
+    cards.append(("acc", "Niño 3.4 terakhir dan fase", f'{fmt(nn["nino34"])} <small>°C · {nn["fase"]}</small>',
+                  f'{mon_label(nn["tanggal"])} (data) · forecast memakai {NINO_TXT}'))
 st.markdown('<div class="kpis">' + "".join(f'<div class="kpi {c}"><div class="l">{l}</div><div class="v">{v}</div><div class="s" title="{re.sub("<[^>]+>", "", s_)}">{s_}</div></div>' for c, l, v, s_ in cards) + "</div>",
             unsafe_allow_html=True)
 
@@ -885,7 +839,14 @@ with st.container(key="main"):
 
     # ---------------- kiri: model
     with L.container(key="secL"):
-        st.markdown('<div class="sec">Forecast dan Performa Model<span>observasi, prediksi, evaluasi</span></div>', unsafe_allow_html=True)
+        _fp = fc_for(prov)
+        if len(_fp):
+            _pk = _fp.loc[_fp["a"].idxmax()]
+            _ins = (f"{'6 provinsi' if prov == 'ALL' else pl(prov)}: anomali positif di {int((_fp['a'] >= 0).sum())} dari {len(_fp)} bulan forecast, "
+                    f"puncak {mon_label(_pk['d'])} ({fmt(_pk['a'], 2, True)} °C)")
+        else:
+            _ins = "observasi, prediksi, evaluasi"
+        st.markdown(f'<div class="sec">Forecast dan performa model<span>{_ins}</span></div>', unsafe_allow_html=True)
         with st.container(key="tsCard"):
             with st.container(key="tsHead"):
                 h1, h2 = st.columns([2.4, 1.6], vertical_alignment="center")
@@ -896,28 +857,18 @@ with st.container(key="main"):
                         view = h2.segmented_control("Tampilan", ["Forecast", "Backtest 12 bln"], default="Forecast", key="tsview", label_visibility="collapsed") or "Forecast"
                     except Exception:
                         view = h2.radio("Tampilan", ["Forecast", "Backtest 12 bln"], horizontal=True, key="tsview_r", label_visibility="collapsed")
-            _f = fc_for(prov)
-            if view == "Forecast" and len(_f):
-                _np, _n = int((_f["a"] >= 0).sum()), len(_f)
-                _pk = _f.loc[_f["a"].abs().idxmax()]
-                _sj = f'<b>{"positif" if _np == _n else "negatif" if _np == 0 else "campuran"}</b>'
-                _ins = (f'Anomali {_sj} diperkirakan sepanjang {_n} bulan ke depan, puncak <b>{mon_label(_pk["d"])} ({fmt(_pk["a"], 2, True)} °C)</b>.' if _np in (0, _n)
-                        else f'Anomali positif pada {_np} dari {_n} bulan ke depan; puncak <b>{mon_label(_pk["d"])} ({fmt(_pk["a"], 2, True)} °C)</b>.')
-            else:
-                _ins = None
             if view == "Forecast":
                 fg, nm = fig_temp()
                 h1.markdown(f'<div class="ct">Suhu udara 2 m, ERA5 dan forecast<span>{nm} · {ALGO_NAME[algo]} · {src}</span></div>', unsafe_allow_html=True)
             else:
                 fg, nm, info = fig_back()
                 h1.markdown(f'<div class="ct">Backtest 12 bulan uji: prediksi vs ERA5<span>{nm} · {info}</span></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="ins">{_ins if view == "Forecast" and _ins else ("Backtest: " + info if view != "Forecast" else "")}</div>', unsafe_allow_html=True)
             plot(fg, key="c_temp")
         with st.container(key="rowL"):
             a, b = st.columns(2)
             with a.container(key="fiCard"):
                 fg, note = fig_fi()
-                st.markdown(f'<div class="ct">Feature Importance, Top 8 {tip("ⓘ", "Importance")}<span>{ALGO_NAME[algo]} · {src} · kenaikan RMSE, °C</span></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="ct">Feature Importance, Top 8 {tip("ⓘ", "Importance")}<span>{ALGO_NAME[algo]} · {src}</span></div>', unsafe_allow_html=True)
                 plot(fg, key="c_fi")
                 n_feat = int(imp[(imp["model"] == ALGO_NAME[algo]) & (imp["pendekatan"] == src)]["fitur"].nunique())
                 pass
@@ -929,7 +880,7 @@ with st.container(key="main"):
 
     # ---------------- kanan: anomali
     with R.container(key="secR"):
-        st.markdown('<div class="sec">Anomali Suhu<span>sebaran spasial dan tren</span></div>', unsafe_allow_html=True)
+        st.markdown('<div class="sec">Anomali suhu<span>sebaran spasial dan tren</span></div>', unsafe_allow_html=True)
         with st.container(key="mapCard"):
             s = summary()
             geo_ok = D["geo"] is not None and len(prep_geo(D["geo"], tuple(PROVS))) > 0
@@ -950,7 +901,7 @@ with st.container(key="main"):
             pk = str(mxr["peak"])
             pk = mon_label(pk[:7] + "-01") if len(pk) >= 7 else pk
             who = "rata-rata 6 prov." if prov == "ALL" else pl(prov)
-            vals = [("Rerata anomali", fmt(sc["mean"].mean(), 2, True) + " °C", f"forecast 12 bln · {who}"),
+            vals = [("Rerata anomali", fmt(sc["mean"].mean(), 2, True) + " °C", f"12 bln · {'6 prov.' if prov == 'ALL' else pl(prov)}"),
                     ("Anomali maks", fmt(mxr["max"], 2, True) + " °C", f"{pl(mxr['prov'])} · {pk}"),
                     ("Rerata tertinggi", pl(hi_["prov"]), fmt(hi_["mean"], 2, True) + " °C"),
                     ("Rerata terendah", pl(lo_["prov"]), fmt(lo_["mean"], 2, True) + " °C")]
