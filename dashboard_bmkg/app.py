@@ -13,7 +13,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-st.set_page_config(page_title="Dashboard Forecast Suhu Jawa", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Dashboard Prakiraan Anomali Suhu Udara Pulau Jawa", layout="wide", initial_sidebar_state="collapsed")
 
 # ------------------------------------------------------------------ konstanta
 NAVY, BLUE, ORANGE = "#0b2a4a", "#1f6fb5", "#e8710a"
@@ -303,7 +303,7 @@ def reset_all():
 # ------------------------------------------------------------------ header (identitas bisa diubah di sini)
 # Satu halaman = satu orang. Ganti judul, nama, dan unit tiap halaman di sini (nama di header ikut berubah per halaman).
 PAGES = {
-    "1": {"judul": "Dashboard utama", "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
+    "1": {"judul": "Dashboard utama", "nama": "Abie Septian Wibowo", "unit": "Statistika dan Sains Data · IPB"},
     "2": {"judul": "Halaman 2", "nama": "Nama Teman 2", "unit": "Magang BMKG · IPB"},
     "3": {"judul": "Halaman 3", "nama": "Nama Teman 3", "unit": "Magang BMKG · IPB"},
     "4": {"judul": "Halaman 4", "nama": "Nama Teman 4", "unit": "Magang BMKG · IPB"},
@@ -324,7 +324,7 @@ ID = PAGES[PAGE]
 st.markdown(
     f"""<div class="hdr">{_logo("logo_bmkg", "logo<br>BMKG")}{_logo("logo_ipb", "logo<br>IPB")}
 <div class="ttl"><h1>Dashboard Forecast Suhu Udara Pulau Jawa</h1>
-<div class="sub">Pemantauan t2m, anomali, dan performa model ML untuk 6 provinsi, ERA5 + Niño 3.4</div></div>
+<div class="sub">Prakiraan anomali suhu udara 6 provinsi di Jawa dengan Gradient Boosting, ERA5, dan Niño 3.4</div></div>
 <div class="bx pg"><span class="pgl">Halaman</span></div><div class="bx idn"><b>{ID["nama"]}</b><br>{ID["unit"]}</div></div>""",
     unsafe_allow_html=True,
 )
