@@ -129,7 +129,14 @@ div[data-testid="stElementContainer"] {margin:0 !important; flex-shrink:0 !impor
 .hdr .sub {font-size:10.5px; color:#b9cde3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .hdr .bx {flex:none; border:1px solid rgba(255,255,255,.35); border-radius:8px; padding:3px 12px; font-size:11px; line-height:1.25; text-align:center; color:#e4eef8; background:rgba(255,255,255,.08);}
 .hdr .bx b {color:#fff; font-size:12px;}
-.hdr .pg {width:150px;} .hdr .idn {width:210px;}
+.hdr .pg {width:150px; height:38px; box-sizing:border-box; position:relative;}
+.hdr .pgl {position:absolute; top:2px; left:0; right:0; font-size:9.5px; text-transform:uppercase; letter-spacing:.6px; color:#b9cde3;}
+.st-key-pgnav {position:fixed !important; top:32px; right:239px; width:148px; z-index:999990; height:22px; gap:0 !important;}
+.st-key-pgnav [data-testid="stButtonGroup"] {width:100%; justify-content:center;}
+.st-key-pgnav button {min-height:22px !important; height:22px !important; padding:0 12px !important; font-size:11px !important;}
+.st-key-pgnav button p, .st-key-pgnav button div {font-size:11px !important;}
+.blank {height:calc(var(--flt) + var(--kpi) + var(--M) + 2*var(--gap) - 16px); border:2px dashed #b9c7d8; border-radius:10px; display:grid; place-items:center; text-align:center; background:rgba(255,255,255,.4);}
+.blank .bt {font-size:20px; font-weight:700; color:§NAVY;} .blank .bs {font-size:12px; color:#7a8a9d; margin-top:4px;} .hdr .idn {width:210px;}
 /* filter */
 .st-key-filt {height:var(--flt); background:#fff; border:1px solid #dde4ec; border-radius:8px; padding:4px 12px !important; box-sizing:border-box; overflow:hidden; justify-content:center;}
 .st-key-filt [data-testid="stHorizontalBlock"] {align-items:flex-start;}
@@ -302,10 +309,27 @@ st.markdown(
     f"""<div class="hdr">{_logo("logo_bmkg", "logo<br>BMKG")}{_logo("logo_ipb", "logo<br>IPB")}
 <div class="ttl"><h1>Dashboard Forecast Suhu Udara Pulau Jawa</h1>
 <div class="sub">Pemantauan t2m, anomali, dan performa model ML untuk 6 provinsi, ERA5 + Niño 3.4</div></div>
-<div class="bx pg">Halaman<br><b>1 / 1</b></div><div class="bx idn"><b>{NAMA_SAYA}</b><br>{UNIT_SAYA}</div></div>""",
+<div class="bx pg"><span class="pgl">Halaman</span></div><div class="bx idn"><b>{NAMA_SAYA}</b><br>{UNIT_SAYA}</div></div>""",
     unsafe_allow_html=True,
 )
 
+# ------------------------------------------------------------------ halaman (2-4 masih kosong)
+PAGES = {"1": "Dashboard utama", "2": "Halaman 2", "3": "Halaman 3", "4": "Halaman 4"}   # ganti judul di sini
+
+
+def footer():
+    st.markdown(
+        f'<div class="foot"><div>Info data <span class="pill"><span class="dot"></span>Data terakhir: {mon_label(last_obs)} · Forecast s.d. {mon_label(fc_end)}</span></div>'
+        f'<div><b>ERA5</b> · Normal {norm_period} · <span class="w">Eksperimental, bersyarat {NINO_NOTE}; bukan produk operasional BMKG</span> · Detail di tombol ⓘ Catatan</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+with st.container(key="pgnav"):
+    try:
+        PAGE = st.segmented_control("Halaman", list(PAGES), default="1", key="page", label_visibility="collapsed") or "1"
+    except Exception:
+        PAGE = st.radio("Halaman", list(PAGES), horizontal=True, key="page_r", label_visibility="collapsed")
 # ------------------------------------------------------------------ filter
 filt = st.container(key="filt")
 c1, c2, c3, c4, c5, c6 = filt.columns([1.2, 1.2, 1, 1.5, .55, .6])
@@ -337,6 +361,14 @@ if isinstance(rng, (tuple, list)) and len(rng) == 2:
     d0, d1 = pd.Timestamp(rng[0]).to_period("M").to_timestamp(), pd.Timestamp(rng[1]).to_period("M").to_timestamp("M")
 else:
     d0, d1 = pd.Timestamp(DEFAULTS["rng"][0]), pd.Timestamp(DEFAULTS["rng"][1])
+
+
+# ------------------------------------------------------------------ halaman 2-4 (kosong). Filter tetap dirender (disembunyikan) agar pilihannya tidak hilang.
+if PAGE != "1":
+    st.markdown("<style>.st-key-filt {display:none !important;}</style>", unsafe_allow_html=True)
+    st.markdown(f'<div class="blank"><div><div class="bt">{PAGES[PAGE]}</div><div class="bs">Konten menyusul</div></div></div>', unsafe_allow_html=True)
+    footer()
+    st.stop()
 
 
 # ------------------------------------------------------------------ turunan
@@ -854,8 +886,4 @@ with st.container(key="main"):
             plot(fg, key="c_anom")
 
 # ------------------------------------------------------------------ footer
-st.markdown(
-    f'<div class="foot"><div>Info data <span class="pill"><span class="dot"></span>Data terakhir: {mon_label(last_obs)} · Forecast s.d. {mon_label(fc_end)}</span></div>'
-    f'<div><b>ERA5</b> · Normal {norm_period} · <span class="w">Eksperimental, bersyarat {NINO_NOTE}; bukan produk operasional BMKG</span> · Detail di tombol ⓘ Catatan</div></div>',
-    unsafe_allow_html=True,
-)
+footer()
