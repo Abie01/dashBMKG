@@ -1,0 +1,256 @@
+﻿pendekatan,provinsi,fitur,lolos_vif
+Pooled,Semua provinsi,month_cos,1
+Pooled,Semua provinsi,month_sin,1
+Pooled,Semua provinsi,pev_roll12_mean,1
+Pooled,Semua provinsi,pev_roll3_std,1
+Pooled,Semua provinsi,slhf_lag1,1
+Pooled,Semua provinsi,slhf_lag2,1
+Pooled,Semua provinsi,slhf_lag3,1
+Pooled,Semua provinsi,slhf_roll12_mean,1
+Pooled,Semua provinsi,slhf_roll3_std,1
+Pooled,Semua provinsi,slhf_roll6_std,1
+Pooled,Semua provinsi,sp_lag3,1
+Pooled,Semua provinsi,sp_roll12_std,1
+Pooled,Semua provinsi,sp_roll3_std,1
+Pooled,Semua provinsi,sp_roll6_std,1
+Pooled,Semua provinsi,sshf_roll3_std,1
+Pooled,Semua provinsi,ssrd_lag1,1
+Pooled,Semua provinsi,ssrd_lag2,1
+Pooled,Semua provinsi,ssrd_lag3,1
+Pooled,Semua provinsi,ssrd_roll12_mean,1
+Pooled,Semua provinsi,ssrd_roll12_std,1
+Pooled,Semua provinsi,ssrd_roll3_std,1
+Pooled,Semua provinsi,ssrd_roll6_std,1
+Pooled,Semua provinsi,strd_lag1,1
+Pooled,Semua provinsi,strd_lag3,1
+Pooled,Semua provinsi,swvl1_roll12_mean,1
+Pooled,Semua provinsi,swvl1_roll12_std,1
+Pooled,Semua provinsi,swvl1_roll3_std,1
+Pooled,Semua provinsi,swvl1_roll6_std,1
+Pooled,Semua provinsi,t2m_lag1,1
+Pooled,Semua provinsi,t2m_lag11,1
+Pooled,Semua provinsi,t2m_lag12,1
+Pooled,Semua provinsi,t2m_lag5,1
+Pooled,Semua provinsi,u10_lag9_exp,1
+Pooled,Semua provinsi,nino34_lag0,1
+Pooled,Semua provinsi,nino34_lag3,1
+Per-provinsi,Banten,d2m_lag1,1
+Per-provinsi,Banten,month_cos,1
+Per-provinsi,Banten,month_sin,1
+Per-provinsi,Banten,nino34_lag0,1
+Per-provinsi,Banten,nino34_lag3,1
+Per-provinsi,Banten,pev_roll3_std,1
+Per-provinsi,Banten,slhf_lag1,1
+Per-provinsi,Banten,slhf_lag2,1
+Per-provinsi,Banten,slhf_lag3,1
+Per-provinsi,Banten,slhf_roll12_mean,1
+Per-provinsi,Banten,slhf_roll12_std,1
+Per-provinsi,Banten,slhf_roll3_std,1
+Per-provinsi,Banten,slhf_roll6_std,1
+Per-provinsi,Banten,sp_lag1,1
+Per-provinsi,Banten,sp_lag2,1
+Per-provinsi,Banten,sp_lag3,1
+Per-provinsi,Banten,sp_roll12_mean,1
+Per-provinsi,Banten,sp_roll12_std,1
+Per-provinsi,Banten,sp_roll3_std,1
+Per-provinsi,Banten,sp_roll6_std,1
+Per-provinsi,Banten,sshf_roll3_std,1
+Per-provinsi,Banten,ssrd_lag3,1
+Per-provinsi,Banten,ssrd_roll12_std,1
+Per-provinsi,Banten,ssrd_roll3_std,1
+Per-provinsi,Banten,ssrd_roll6_std,1
+Per-provinsi,Banten,strd_lag1,1
+Per-provinsi,Banten,strd_lag3,1
+Per-provinsi,Banten,swvl1_roll12_mean,1
+Per-provinsi,Banten,swvl1_roll3_std,1
+Per-provinsi,Banten,swvl1_roll6_std,1
+Per-provinsi,Banten,t2m_lag1,1
+Per-provinsi,Banten,t2m_lag11,1
+Per-provinsi,Banten,t2m_lag12,1
+Per-provinsi,Banten,t2m_lag2,1
+Per-provinsi,Banten,t2m_lag3,1
+Per-provinsi,Banten,t2m_lag5,1
+Per-provinsi,Banten,t2m_trend36,1
+Per-provinsi,Banten,u10_lag9_exp,1
+Per-provinsi,Jakarta,d2m_lag1,1
+Per-provinsi,Jakarta,d2m_lag2,1
+Per-provinsi,Jakarta,month_cos,1
+Per-provinsi,Jakarta,month_sin,1
+Per-provinsi,Jakarta,nino34_lag0,1
+Per-provinsi,Jakarta,nino34_lag3,1
+Per-provinsi,Jakarta,pev_roll3_std,1
+Per-provinsi,Jakarta,pev_roll6_std,1
+Per-provinsi,Jakarta,slhf_lag1,1
+Per-provinsi,Jakarta,slhf_lag2,1
+Per-provinsi,Jakarta,slhf_lag3,1
+Per-provinsi,Jakarta,slhf_roll12_std,1
+Per-provinsi,Jakarta,slhf_roll3_std,1
+Per-provinsi,Jakarta,slhf_roll6_std,1
+Per-provinsi,Jakarta,sp_lag1,1
+Per-provinsi,Jakarta,sp_lag2,1
+Per-provinsi,Jakarta,sp_lag3,1
+Per-provinsi,Jakarta,sp_roll12_mean,1
+Per-provinsi,Jakarta,sp_roll12_std,1
+Per-provinsi,Jakarta,sp_roll3_std,1
+Per-provinsi,Jakarta,sp_roll6_std,1
+Per-provinsi,Jakarta,sshf_roll3_std,1
+Per-provinsi,Jakarta,ssrd_lag3,1
+Per-provinsi,Jakarta,ssrd_roll12_mean,1
+Per-provinsi,Jakarta,ssrd_roll12_std,1
+Per-provinsi,Jakarta,ssrd_roll3_std,1
+Per-provinsi,Jakarta,ssrd_roll6_std,1
+Per-provinsi,Jakarta,strd_lag1,1
+Per-provinsi,Jakarta,strd_lag3,1
+Per-provinsi,Jakarta,swvl1_roll12_std,1
+Per-provinsi,Jakarta,swvl1_roll3_std,1
+Per-provinsi,Jakarta,t2m_lag1,1
+Per-provinsi,Jakarta,t2m_lag11,1
+Per-provinsi,Jakarta,t2m_lag12,1
+Per-provinsi,Jakarta,t2m_lag2,1
+Per-provinsi,Jakarta,t2m_lag5,1
+Per-provinsi,Jakarta,t2m_trend36,1
+Per-provinsi,Jakarta,u10_lag9_exp,1
+Per-provinsi,Jawa Barat,month_cos,1
+Per-provinsi,Jawa Barat,nino34_lag0,1
+Per-provinsi,Jawa Barat,nino34_lag3,1
+Per-provinsi,Jawa Barat,slhf_lag1,1
+Per-provinsi,Jawa Barat,slhf_lag2,1
+Per-provinsi,Jawa Barat,slhf_lag3,1
+Per-provinsi,Jawa Barat,slhf_roll12_mean,1
+Per-provinsi,Jawa Barat,slhf_roll12_std,1
+Per-provinsi,Jawa Barat,slhf_roll3_std,1
+Per-provinsi,Jawa Barat,slhf_roll6_std,1
+Per-provinsi,Jawa Barat,sp_lag1,1
+Per-provinsi,Jawa Barat,sp_lag2,1
+Per-provinsi,Jawa Barat,sp_lag3,1
+Per-provinsi,Jawa Barat,sp_roll12_mean,1
+Per-provinsi,Jawa Barat,sp_roll12_std,1
+Per-provinsi,Jawa Barat,sp_roll3_std,1
+Per-provinsi,Jawa Barat,sp_roll6_std,1
+Per-provinsi,Jawa Barat,sshf_roll3_std,1
+Per-provinsi,Jawa Barat,ssrd_lag1,1
+Per-provinsi,Jawa Barat,ssrd_lag3,1
+Per-provinsi,Jawa Barat,ssrd_roll12_std,1
+Per-provinsi,Jawa Barat,ssrd_roll3_std,1
+Per-provinsi,Jawa Barat,ssrd_roll6_std,1
+Per-provinsi,Jawa Barat,strd_lag1,1
+Per-provinsi,Jawa Barat,strd_lag3,1
+Per-provinsi,Jawa Barat,swvl1_roll12_std,1
+Per-provinsi,Jawa Barat,swvl1_roll3_std,1
+Per-provinsi,Jawa Barat,swvl1_roll6_std,1
+Per-provinsi,Jawa Barat,t2m_lag1,1
+Per-provinsi,Jawa Barat,t2m_lag11,1
+Per-provinsi,Jawa Barat,t2m_lag12,1
+Per-provinsi,Jawa Barat,t2m_lag2,1
+Per-provinsi,Jawa Barat,t2m_lag3,1
+Per-provinsi,Jawa Barat,t2m_lag5,1
+Per-provinsi,Jawa Barat,t2m_trend36,1
+Per-provinsi,Jawa Barat,u10_lag9_exp,1
+Per-provinsi,Jawa Tengah,month_cos,1
+Per-provinsi,Jawa Tengah,nino34_lag0,1
+Per-provinsi,Jawa Tengah,nino34_lag3,1
+Per-provinsi,Jawa Tengah,slhf_lag1,1
+Per-provinsi,Jawa Tengah,slhf_lag2,1
+Per-provinsi,Jawa Tengah,slhf_lag3,1
+Per-provinsi,Jawa Tengah,slhf_roll12_std,1
+Per-provinsi,Jawa Tengah,slhf_roll3_std,1
+Per-provinsi,Jawa Tengah,slhf_roll6_std,1
+Per-provinsi,Jawa Tengah,sp_lag1,1
+Per-provinsi,Jawa Tengah,sp_lag2,1
+Per-provinsi,Jawa Tengah,sp_lag3,1
+Per-provinsi,Jawa Tengah,sp_roll12_mean,1
+Per-provinsi,Jawa Tengah,sp_roll12_std,1
+Per-provinsi,Jawa Tengah,sp_roll3_std,1
+Per-provinsi,Jawa Tengah,sp_roll6_std,1
+Per-provinsi,Jawa Tengah,sshf_roll3_std,1
+Per-provinsi,Jawa Tengah,ssrd_lag1,1
+Per-provinsi,Jawa Tengah,ssrd_lag2,1
+Per-provinsi,Jawa Tengah,ssrd_lag3,1
+Per-provinsi,Jawa Tengah,ssrd_roll12_mean,1
+Per-provinsi,Jawa Tengah,ssrd_roll12_std,1
+Per-provinsi,Jawa Tengah,ssrd_roll3_std,1
+Per-provinsi,Jawa Tengah,ssrd_roll6_std,1
+Per-provinsi,Jawa Tengah,strd_lag1,1
+Per-provinsi,Jawa Tengah,strd_lag3,1
+Per-provinsi,Jawa Tengah,swvl1_roll12_mean,1
+Per-provinsi,Jawa Tengah,swvl1_roll3_std,1
+Per-provinsi,Jawa Tengah,t2m_lag1,1
+Per-provinsi,Jawa Tengah,t2m_lag11,1
+Per-provinsi,Jawa Tengah,t2m_lag12,1
+Per-provinsi,Jawa Tengah,t2m_lag2,1
+Per-provinsi,Jawa Tengah,t2m_lag3,1
+Per-provinsi,Jawa Tengah,t2m_lag5,1
+Per-provinsi,Jawa Tengah,t2m_trend36,1
+Per-provinsi,Jawa Tengah,u10_lag9_exp,1
+Per-provinsi,Jawa Timur,nino34_lag0,1
+Per-provinsi,Jawa Timur,nino34_lag3,1
+Per-provinsi,Jawa Timur,slhf_lag1,1
+Per-provinsi,Jawa Timur,slhf_lag3,1
+Per-provinsi,Jawa Timur,slhf_roll3_std,1
+Per-provinsi,Jawa Timur,slhf_roll6_std,1
+Per-provinsi,Jawa Timur,sp_lag1,1
+Per-provinsi,Jawa Timur,sp_lag2,1
+Per-provinsi,Jawa Timur,sp_lag3,1
+Per-provinsi,Jawa Timur,sp_roll12_mean,1
+Per-provinsi,Jawa Timur,sp_roll12_std,1
+Per-provinsi,Jawa Timur,sp_roll3_std,1
+Per-provinsi,Jawa Timur,sp_roll6_std,1
+Per-provinsi,Jawa Timur,sshf_roll3_std,1
+Per-provinsi,Jawa Timur,ssrd_lag1,1
+Per-provinsi,Jawa Timur,ssrd_lag2,1
+Per-provinsi,Jawa Timur,ssrd_lag3,1
+Per-provinsi,Jawa Timur,ssrd_roll12_mean,1
+Per-provinsi,Jawa Timur,ssrd_roll12_std,1
+Per-provinsi,Jawa Timur,ssrd_roll3_std,1
+Per-provinsi,Jawa Timur,ssrd_roll6_std,1
+Per-provinsi,Jawa Timur,strd_lag1,1
+Per-provinsi,Jawa Timur,strd_lag3,1
+Per-provinsi,Jawa Timur,swvl1_roll12_mean,1
+Per-provinsi,Jawa Timur,swvl1_roll3_std,1
+Per-provinsi,Jawa Timur,swvl1_roll6_std,1
+Per-provinsi,Jawa Timur,t2m_lag1,1
+Per-provinsi,Jawa Timur,t2m_lag11,1
+Per-provinsi,Jawa Timur,t2m_lag12,1
+Per-provinsi,Jawa Timur,t2m_lag3,1
+Per-provinsi,Jawa Timur,t2m_lag5,1
+Per-provinsi,Jawa Timur,t2m_trend24,1
+Per-provinsi,Jawa Timur,t2m_trend36,1
+Per-provinsi,Jawa Timur,u10_lag9_exp,1
+Per-provinsi,Yogyakarta,month_cos,1
+Per-provinsi,Yogyakarta,nino34_lag0,1
+Per-provinsi,Yogyakarta,nino34_lag3,1
+Per-provinsi,Yogyakarta,pev_roll12_std,1
+Per-provinsi,Yogyakarta,pev_roll3_std,1
+Per-provinsi,Yogyakarta,slhf_lag1,1
+Per-provinsi,Yogyakarta,slhf_lag3,1
+Per-provinsi,Yogyakarta,slhf_roll12_mean,1
+Per-provinsi,Yogyakarta,slhf_roll3_std,1
+Per-provinsi,Yogyakarta,slhf_roll6_std,1
+Per-provinsi,Yogyakarta,sp_lag1,1
+Per-provinsi,Yogyakarta,sp_lag2,1
+Per-provinsi,Yogyakarta,sp_lag3,1
+Per-provinsi,Yogyakarta,sp_roll12_mean,1
+Per-provinsi,Yogyakarta,sp_roll12_std,1
+Per-provinsi,Yogyakarta,sp_roll3_std,1
+Per-provinsi,Yogyakarta,sp_roll6_std,1
+Per-provinsi,Yogyakarta,sshf_roll3_std,1
+Per-provinsi,Yogyakarta,ssrd_lag1,1
+Per-provinsi,Yogyakarta,ssrd_lag2,1
+Per-provinsi,Yogyakarta,ssrd_lag3,1
+Per-provinsi,Yogyakarta,ssrd_roll12_mean,1
+Per-provinsi,Yogyakarta,ssrd_roll12_std,1
+Per-provinsi,Yogyakarta,ssrd_roll3_std,1
+Per-provinsi,Yogyakarta,ssrd_roll6_std,1
+Per-provinsi,Yogyakarta,strd_lag1,1
+Per-provinsi,Yogyakarta,strd_lag3,1
+Per-provinsi,Yogyakarta,swvl1_roll3_std,1
+Per-provinsi,Yogyakarta,swvl1_roll6_std,1
+Per-provinsi,Yogyakarta,t2m_lag1,1
+Per-provinsi,Yogyakarta,t2m_lag11,1
+Per-provinsi,Yogyakarta,t2m_lag12,1
+Per-provinsi,Yogyakarta,t2m_lag2,1
+Per-provinsi,Yogyakarta,t2m_lag3,1
+Per-provinsi,Yogyakarta,t2m_lag5,1
+Per-provinsi,Yogyakarta,t2m_trend24,1
+Per-provinsi,Yogyakarta,t2m_trend36,1
+Per-provinsi,Yogyakarta,u10_lag9_exp,1
