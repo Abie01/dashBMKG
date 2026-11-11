@@ -323,7 +323,7 @@ PAGE = SS.get("page") or "1"   # nilai pilihan halaman (widget-nya dibuat setela
 ID = PAGES[PAGE]
 st.markdown(
     f"""<div class="hdr">{_logo("logo_bmkg", "logo<br>BMKG")}{_logo("logo_ipb", "logo<br>IPB")}
-<div class="ttl"><h1>Dashboard Forecast Suhu Udara Pulau Jawa</h1>
+<div class="ttl"><h1>Dashboard Prakiraan Anomali Suhu Udara Pulau Jawa</h1>
 <div class="sub">Prakiraan anomali suhu udara 6 provinsi di Jawa dengan Gradient Boosting, ERA5, dan Niño 3.4</div></div>
 <div class="bx pg"><span class="pgl">Halaman</span></div><div class="bx idn"><b>{ID["nama"]}</b><br>{ID["unit"]}</div></div>""",
     unsafe_allow_html=True,
