@@ -345,7 +345,7 @@ P2_DIR = os.path.join(HERE, "halaman", "p2_spi_banten")   # halaman 2: dashboard
 
 def _p2_sub():
     try:
-        m = json.load(open(os.path.join(P2_DIR, "dashboard_meta.json"), encoding="utf-8"))
+        m = json.load(open(os.path.join(DATA_DIR, "dashboard_meta.json"), encoding="utf-8"))
         return f'{m.get("gcm")} · {m.get("skenario")} · acuan {m.get("target")} · bulan kering = SPI ≤ −1 · vs 1981–2010'
     except Exception:
         return "Proyeksi frekuensi bulan kering (SPI ≤ −1) terhadap 1981–2010"
@@ -433,7 +433,7 @@ if PAGE != "1":
     if PAGE == "2":   # dashboard SPI Banten: dijalankan sebagai skrip terpisah (mode EMBED), tanpa mengubah state halaman 1
         import runpy
         with st.container(key="p2"):
-            runpy.run_path(os.path.join(P2_DIR, "app_dashboard_spi.py"), init_globals={"EMBED": True})
+            runpy.run_path(os.path.join(P2_DIR, "app_dashboard_spi.py"), init_globals={"EMBED": True, "DATA_P2": DATA_DIR})
         st.stop()
     st.markdown(f'<div class="blank"><div><div class="bt">{ID["judul"]}</div><div class="bs">Konten menyusul</div></div></div>', unsafe_allow_html=True)
     footer()
