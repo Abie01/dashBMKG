@@ -354,7 +354,7 @@ def _p2_sub():
 PAGES = {
     "1": {"judul": "Dashboard utama", "title": "Dashboard Forecast Suhu Udara Pulau Jawa",
           "sub": "Pemantauan t2m, anomali, dan performa model ML untuk 6 provinsi, ERA5 + Niño 3.4",
-          "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
+          "nama": "Abie Septian Wibowo", "unit": "Statistika dan Sains Data · IPB"},
     "2": {"judul": "Proyeksi bulan kering Banten", "title": "Downscaling GCM Hujan untuk Proyeksi Kekeringan (SPI) di Banten",
           "sub": _p2_sub(), "nama": "Gemala Aleida Fitri", "unit": "Statistika dan Sains Data · IPB"},
     "3": {"judul": "Halaman 3", "nama": "Nama Teman 3", "unit": "Magang BMKG · IPB"},
