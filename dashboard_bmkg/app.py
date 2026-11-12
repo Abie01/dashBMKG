@@ -258,6 +258,13 @@ table.ev td.min {color:§ORANGE;font-weight:700;}
 """
 _CHARTS = (_h("c_temp", "calc(var(--Tt) - 54px)") + _h("c_anom", "calc(var(--Rb) - 30px)") + _h("c_fi", "calc(var(--Tb) - 40px)")
            + _h("map_sel", "calc(var(--Rt) - 30px - 58px - 4px)") + _h("bars", "calc(var(--Rt) - 30px - 58px - 4px)"))
+_CSS = _CSS.replace("/* responsif */", "\n".join(l.replace(".st-key-filt", ".st-key-filt2") for l in _CSS.splitlines() if l.startswith(".st-key-filt") and "nth-child(n+5)" not in l) + "\n/* responsif */")
+_CSS = _CSS.replace("/* responsif */", """.st-key-ukuran_layar {position:absolute !important; width:0 !important; height:0 !important; overflow:hidden !important; margin:0 !important;}
+.st-key-filt2 [data-testid="stSlider"] div[role="group"] {background:transparent !important; border:0 !important;}
+.st-key-filt2 [data-testid="stSliderThumbValue"], .st-key-filt2 [data-testid="stSliderThumbValue"] * {color:#fff !important; -webkit-text-fill-color:#fff !important; font-weight:600;}
+.st-key-filt2 [data-testid="stSliderTickBar"], .st-key-filt2 [data-testid="stSliderTickBar"] * {color:#b9cde3 !important;}
+/* responsif */""")
+_CSS = _CSS.replace("  .st-key-filt {height:auto !important; min-height:var(--flt);}", "  .st-key-filt, .st-key-filt2 {height:auto !important; min-height:var(--flt);}")
 for _k, _v in {"§NAVY": NAVY, "§BLUE": BLUE, "§ORANGE": ORANGE, "§INK2": INK2, "§INK": INK, "§TEAL": TEAL, "§CHARTS": _CHARTS}.items():
     _CSS = _CSS.replace(_k, _v)
 st.markdown(_CSS, unsafe_allow_html=True)
@@ -333,9 +340,23 @@ def reset_all():
 
 # ------------------------------------------------------------------ header (identitas bisa diubah di sini)
 # Satu halaman = satu orang. Ganti judul, nama, dan unit tiap halaman di sini (nama di header ikut berubah per halaman).
+P2_DIR = os.path.join(HERE, "halaman", "p2_spi_banten")   # halaman 2: dashboard SPI Banten (kode, data, dan komponen ukuran layar ada di folder ini)
+
+
+def _p2_sub():
+    try:
+        m = json.load(open(os.path.join(P2_DIR, "dashboard_meta.json"), encoding="utf-8"))
+        return f'{m.get("gcm")} · {m.get("skenario")} · acuan {m.get("target")} · bulan kering = SPI ≤ −1 · vs 1981–2010'
+    except Exception:
+        return "Proyeksi frekuensi bulan kering (SPI ≤ −1) terhadap 1981–2010"
+
+
 PAGES = {
-    "1": {"judul": "Dashboard utama", "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
-    "2": {"judul": "Halaman 2", "nama": "Nama Teman 2", "unit": "Magang BMKG · IPB"},
+    "1": {"judul": "Dashboard utama", "title": "Dashboard Forecast Suhu Udara Pulau Jawa",
+          "sub": "Pemantauan t2m, anomali, dan performa model ML untuk 6 provinsi, ERA5 + Niño 3.4",
+          "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
+    "2": {"judul": "Proyeksi bulan kering Banten", "title": "Downscaling GCM Hujan untuk Proyeksi Kekeringan (SPI) di Banten",
+          "sub": _p2_sub(), "nama": "Gemala Aleida Fitri", "unit": "Statistika dan Sains Data · IPB"},
     "3": {"judul": "Halaman 3", "nama": "Nama Teman 3", "unit": "Magang BMKG · IPB"},
     "4": {"judul": "Halaman 4", "nama": "Nama Teman 4", "unit": "Magang BMKG · IPB"},
 }
@@ -354,8 +375,8 @@ PAGE = SS.get("page") or "1"   # nilai pilihan halaman (widget-nya dibuat setela
 ID = PAGES[PAGE]
 st.markdown(
     f"""<div class="hdr">{_logo("logo_bmkg", "logo<br>BMKG")}{_logo("logo_ipb", "logo<br>IPB")}
-<div class="ttl"><h1>Dashboard Forecast Suhu Udara Pulau Jawa</h1>
-<div class="sub">Pemantauan t2m, anomali, dan performa model ML untuk 6 provinsi, ERA5 + Niño 3.4</div></div>
+<div class="ttl"><h1>{ID.get("title", "Dashboard")}</h1>
+<div class="sub">{ID.get("sub", "")}</div></div>
 <div class="bx pg"><span class="pgl">Halaman</span></div><div class="bx idn"><b>{ID["nama"]}</b><br>{ID["unit"]}</div></div>""",
     unsafe_allow_html=True,
 )
@@ -408,7 +429,12 @@ else:
 
 # ------------------------------------------------------------------ halaman 2-4 (kosong). Filter tetap dirender (disembunyikan) agar pilihannya tidak hilang.
 if PAGE != "1":
-    st.markdown("<style>.st-key-filt {display:none !important;}</style>", unsafe_allow_html=True)
+    st.markdown("<style>.st-key-filt, [data-testid='stLayoutWrapper']:has(> .st-key-filt) {display:none !important;}</style>", unsafe_allow_html=True)
+    if PAGE == "2":   # dashboard SPI Banten: dijalankan sebagai skrip terpisah (mode EMBED), tanpa mengubah state halaman 1
+        import runpy
+        with st.container(key="p2"):
+            runpy.run_path(os.path.join(P2_DIR, "app_dashboard_spi.py"), init_globals={"EMBED": True})
+        st.stop()
     st.markdown(f'<div class="blank"><div><div class="bt">{ID["judul"]}</div><div class="bs">Konten menyusul</div></div></div>', unsafe_allow_html=True)
     footer()
     st.stop()
