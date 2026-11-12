@@ -107,7 +107,7 @@ def _h(key, expr):
 _CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-:root{--hdr:68px; --flt:80px; --kpi:72px; --ftr:32px; --gap:8px;
+:root{--hdr:56px; --flt:80px; --kpi:72px; --ftr:32px; --gap:8px;
   --M:max(440px, calc(100vh - var(--hdr) - var(--flt) - var(--kpi) - var(--ftr) - 5*var(--gap) - 8px));
   --A:calc(var(--M) - 40px); --Tt:calc(var(--A)*.555); --Tb:calc(var(--A)*.445); --Rt:calc(var(--A)*.48); --Rb:calc(var(--A)*.52);}
 header[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], footer, #MainMenu {display:none !important;}
@@ -127,8 +127,9 @@ div[data-testid="stElementContainer"]:has(> .st-key-pgnav), [data-testid="stLayo
 [data-testid="stMarkdownContainer"] p {margin:0 !important;}
 /* header */
 .hdr {margin:0 -.6rem; height:var(--hdr); background:#fff; color:§NAVY; display:flex; align-items:center; gap:10px; padding:0 .6rem; border-bottom:3px solid §ORANGE; box-sizing:border-box; box-shadow:0 1px 6px rgba(11,42,74,.10);}
-.hdr .lg {width:38px;height:38px;flex:none;border-radius:8px;background:transparent;padding:1px;box-sizing:border-box;color:§NAVY;display:grid;place-items:center;font-weight:800;font-size:9px;text-align:center;line-height:1.1;overflow:hidden;}
-.hdr .lg img {width:100%;height:100%;object-fit:contain;}
+.hdr .lg {height:44px;flex:none;background:transparent;padding:0;display:flex;align-items:center;color:§NAVY;font-weight:800;font-size:9px;text-align:center;line-height:1.1;}
+.hdr .lg img {height:44px;width:auto;display:block;}
+.hdr .lg + .lg {margin-left:14px;}
 .hdr .ttl {flex:1; text-align:center; min-width:0;}
 .hdr h1 {font-size:18px; margin:0; padding:0; font-weight:700; color:§NAVY; line-height:1.15; letter-spacing:.2px;}
 .hdr .sub {font-size:11px; color:#5b6b7f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
