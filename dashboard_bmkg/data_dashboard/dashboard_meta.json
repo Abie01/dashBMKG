@@ -1,0 +1,284 @@
+{
+  "gcm": "CMCC-ESM2",
+  "skenario": "SSP370 (satu anggota)",
+  "target": "CHIRPS",
+  "model": "P: XGBoost [mu+V1]",
+  "set_fitur": "P",
+  "status_gerbang": "terbaik dari 4 model (tuning setara); lebih baik daripada klimatologi pada Tingkat 1; sebaran/frekuensi kering Tingkat 2 meleset dari pengamatan: baca perubahan relatif",
+  "horizon": [
+    2026,
+    2050
+  ],
+  "n_anggota_ensemble": 20,
+  "spi_skala": [
+    "SPI-3",
+    "SPI-6",
+    "SPI-12"
+  ],
+  "ambang_kering": -1.0,
+  "proyeksi_pct": {
+    "SPI-3": 26.2833451969358,
+    "SPI-6": 25.33962506420134,
+    "SPI-12": 29.501153402537483
+  },
+  "acuan_target_pct": {
+    "SPI-3": 16.180661362225607,
+    "SPI-6": 15.150092474036136,
+    "SPI-12": 15.228936933807994
+  },
+  "baseline_model_sendiri_pct": {
+    "SPI-3": 24.334405507589867,
+    "SPI-6": 25.308009674206858,
+    "SPI-12": 26.526837139301318
+  },
+  "baris_prediktor_luar_rentang_pct": {
+    "2026-2050": 18.333333333333332,
+    "2051-2075": 61.66666666666667,
+    "2076-2100": 82.0
+  },
+  "gerbang": {
+    "GLM Gamma": {
+      "a": false,
+      "b": true,
+      "c": false
+    },
+    "Random Forest": {
+      "a": true,
+      "b": false,
+      "c": true
+    },
+    "XGBoost": {
+      "a": true,
+      "b": false,
+      "c": false
+    },
+    "Neural Net": {
+      "a": true,
+      "b": false,
+      "c": false
+    }
+  },
+  "catatan": [
+    "Satu GCM, satu skenario, satu anggota: proyeksi bersyarat skenario, bukan prediksi.",
+    "Nilai satu tahun adalah satu realisasi variabilitas, bukan ramalan tahun itu: GCM free-running tidak sefase dengan kejadian nyata.",
+    "Pita p10-p90 = sebaran antar-anggota ensemble dari satu model; tidak mencakup ketidakpastian model, skenario, atau GCM lain.",
+    "Status model: terbaik dari 4 model (tuning setara); lebih baik daripada klimatologi pada Tingkat 1; sebaran/frekuensi kering Tingkat 2 meleset dari pengamatan: baca perubahan relatif. Baca perubahan terhadap baseline model sendiri, bukan nilai mutlak.",
+    "Tahun awal deret: k-1 bulan pertama SPI-k kosong (lihat n_bulan_valid).",
+    "Pola tahun/bulan kering pada deret berasal dari variabilitas internal GCM (mirip ENSO) pada satu lintasan, bukan prediksi kejadian nyata; agregasi banyak tahun/bulan lebih bermakna daripada satu bulan.",
+    "Peluang kering = porsi anggota ensemble dengan SPI <= -1. Pita antar-anggota sempit karena hanya derau di sekitar mu yang sama; bukan ukuran ketidakpastian iklim.",
+    "Prediktor GCM dipotong ke rentang ERA5: sinyal perubahan dari indeks di luar rentang tidak terbawa. Lihat uji sensitivitas di tab Bandingkan model.",
+    "Model dipilih sebagai yang terbaik di antara empat model dengan tuning setara (CRPS Tingkat 1, CV 1981-2020); itu tidak berarti terbukti lebih baik daripada klimatologi. Hold-out 2021-2025 dievaluasi sekali (lihat meta holdout).",
+    "Pada sebaran Tingkat 2, CI bootstrap selisih terhadap klimatologi stokastik bisa memuat 0: model belum dapat dibedakan dari klimatologi stokastik.",
+    "Seluruh hasil dibaca sebagai proyeksi sensitivitas bersyarat (satu GCM, satu skenario, satu anggota), bukan temuan iklim Banten."
+  ],
+  "bulanan": {
+    "berkas": [
+      "dashboard_bulanan_regional.csv.gz",
+      "dashboard_bulanan_per_grid.csv.gz",
+      "dashboard_baseline_bulan_grid.csv.gz",
+      "dashboard_grid.csv"
+    ],
+    "baseline_periode": [
+      1981,
+      2010
+    ],
+    "n_anggota": 20
+  },
+  "korelasi": {
+    "berkas": [
+      "dashboard_korelasi.csv",
+      "dashboard_korelasi_antar.csv"
+    ],
+    "periode_gcm_target": [
+      1981,
+      2020
+    ],
+    "periode_model_t1": [
+      1981,
+      2020
+    ],
+    "r_kritis_p05": 0.3120063686684674,
+    "model": "XGBoost",
+    "catatan": [
+      "r GCM-target: korelasi antar-tahun pada rata-rata wilayah, hanya periode latih (sel 5.12). r model: Tingkat 1 (prediktor ERA5), out-of-fold, rata-rata wilayah.",
+      "Ada 17 uji (12 bulan, 4 musim, tahunan); hanya yang lolos FDR dianggap bukti. Dengan sekitar 34 tahun, galat baku tiap korelasi sekitar 0,17, jadi selisih kecil jangan ditafsirkan.",
+      "Kontrol sefase ERA5 (sel 10.5) menunjukkan uji ini punya daya: bila ERA5 lolos tetapi GCM tidak, GCM memang tidak membawa informasi waktu."
+    ]
+  },
+  "konsistensi_arah": {
+    "model": "XGBoost",
+    "toleransi_pct": 1.0,
+    "jendela": [
+      {
+        "jendela": "2026-2050",
+        "peran": "dilaporkan",
+        "gcm_pr_mentah_pct": -14.74,
+        "model_pct": 0.05,
+        "luar_rentang_pct": 18.3,
+        "berlawanan": false,
+        "semua_model_pct": {
+          "GLM Gamma": 30.18,
+          "Random Forest": 8.66,
+          "XGBoost": 0.05,
+          "Neural Net": 9.91
+        }
+      },
+      {
+        "jendela": "2051-2075",
+        "peran": "diagnostik",
+        "gcm_pr_mentah_pct": -4.94,
+        "model_pct": 14.7,
+        "luar_rentang_pct": 61.7,
+        "berlawanan": true,
+        "semua_model_pct": {
+          "GLM Gamma": 68.38,
+          "Random Forest": 27.02,
+          "XGBoost": 14.7,
+          "Neural Net": 31.25
+        }
+      },
+      {
+        "jendela": "2076-2100",
+        "peran": "diagnostik",
+        "gcm_pr_mentah_pct": -15.0,
+        "model_pct": 9.0,
+        "luar_rentang_pct": 82.0,
+        "berlawanan": true,
+        "semua_model_pct": {
+          "GLM Gamma": 78.56,
+          "Random Forest": 27.75,
+          "XGBoost": 9.0,
+          "Neural Net": 36.41
+        }
+      }
+    ],
+    "model_berlawanan": {
+      "GLM Gamma": [
+        "2026-2050",
+        "2051-2075",
+        "2076-2100"
+      ],
+      "Random Forest": [
+        "2026-2050",
+        "2051-2075",
+        "2076-2100"
+      ],
+      "XGBoost": [
+        "2051-2075",
+        "2076-2100"
+      ],
+      "Neural Net": [
+        "2026-2050",
+        "2051-2075",
+        "2076-2100"
+      ]
+    },
+    "catatan": "Perubahan relatif hujan rata-rata wilayah (persen) terhadap baseline: hujan GCM mentah vs mean model P (digerakkan prediktor GCM). Berlawanan = tanda berbeda, dengan |perubahan| >= toleransi pada keduanya."
+  },
+  "versi_notebook": "v22",
+  "model_transfer_terbaik": {
+    "model": "Random Forest",
+    "selisih_kering_pp": 1.2347322598368642,
+    "model_tampil": "XGBoost",
+    "selisih_kering_pp_model_tampil": 7.207192215037406,
+    "selisih_semua": {
+      "GLM Gamma": 4.208877477705926,
+      "Random Forest": 1.2347322598368642,
+      "XGBoost": 7.207192215037406,
+      "Neural Net": 4.752836946874602
+    }
+  },
+  "holdout": {
+    "periode": [
+      2021,
+      2025
+    ],
+    "model": "XGBoost",
+    "crpss_t1": 0.2541737848306327,
+    "r_anom_t1": 0.6954524508124562,
+    "lebih_baik_dari_klimatologi": true,
+    "crpss_per_tahun": {
+      "2021": 0.02609077993666198,
+      "2022": 0.37335302608291443,
+      "2023": 0.3191288197754225,
+      "2024": 0.31086306679618103,
+      "2025": 0.2352751393616329
+    },
+    "tahun_positif": 5,
+    "n_tahun": 5,
+    "semua_model_crpss_t1": {
+      "GLM Gamma": -0.106445722413548,
+      "Random Forest": 0.20979481744050676,
+      "XGBoost": 0.2541737848306327,
+      "Neural Net": 0.16549855171263406
+    },
+    "crpss_t1_cv_seleksi": 0.16551300517374645
+  },
+  "pemilihan_model": "terbaik di antara 4 model (CRPS Tingkat 1 terkecil, CV 1981-2020, tuning setara)",
+  "tanggal_run": "2026-11-12",
+  "seed": 42,
+  "n_sim_proyeksi": 20,
+  "prediktor_tidak_stabil": [
+    "pi_hus850_jbr",
+    "pi_sst_ie",
+    "pi_prw_jbr",
+    "pi_ua850_sj"
+  ],
+  "ci_tingkat2_memuat_nol": true,
+  "uji": {
+    "berkas": "dashboard_uji.csv",
+    "model": "XGBoost",
+    "periode_baseline": [
+      1981,
+      2010
+    ],
+    "periode_proyeksi": [
+      2026,
+      2050
+    ],
+    "blok_tahun": 3,
+    "n_boot": 4000,
+    "n_boot_grid": 1000,
+    "alfa_fdr": 0.05,
+    "ringkas": {
+      "SPI-3": {
+        "selisih": 1.8375,
+        "lo": -8.5756,
+        "hi": 11.0538,
+        "p": 0.872,
+        "nyata": false,
+        "bulan_nyata": 0,
+        "musim_nyata": 0,
+        "grid_nyata": 0,
+        "n_grid": 396
+      },
+      "SPI-6": {
+        "selisih": -0.2448,
+        "lo": -12.4409,
+        "hi": 9.8514,
+        "p": 0.7735,
+        "nyata": false,
+        "bulan_nyata": 0,
+        "musim_nyata": 0,
+        "grid_nyata": 0,
+        "n_grid": 396
+      },
+      "SPI-12": {
+        "selisih": 2.5164,
+        "lo": -14.5813,
+        "hi": 17.8193,
+        "p": 0.9745,
+        "nyata": false,
+        "bulan_nyata": 0,
+        "musim_nyata": 0,
+        "grid_nyata": 0,
+        "n_grid": 396
+      }
+    },
+    "catatan": [
+      "Uji membandingkan rata-rata tahunan frekuensi bulan kering proyeksi vs masa lalu model sendiri; naik-turun kedua deret tahunan diperhitungkan lewat block bootstrap.",
+      "Keluarga FDR: 17 uji (wilayah, 12 bulan, 4 musim) per skala SPI; per grid satu keluarga tersendiri.",
+      "Hanya satu GCM, satu skenario, satu anggota: ketidakpastian model, skenario, dan GCM lain tidak tercakup, jadi 'belum beda nyata' bukan bukti tidak ada perubahan."
+    ]
+  }
+}
