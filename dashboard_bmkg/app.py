@@ -354,7 +354,7 @@ def _p2_sub():
 PAGES = {
     "1": {"judul": "Dashboard utama", "title": "Dashboard Forecast Suhu Udara Pulau Jawa",
           "sub": "Pemantauan t2m, anomali, dan performa model ML untuk 6 provinsi, ERA5 + Niño 3.4",
-          "nama": "Abie Septian Wibowo", "unit": "Statistika dan Sains Data · IPB"},
+          "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
     "2": {"judul": "Proyeksi bulan kering Banten", "title": "Downscaling GCM Hujan untuk Proyeksi Kekeringan (SPI) di Banten",
           "sub": _p2_sub(), "nama": "Gemala Aleida Fitri", "unit": "Statistika dan Sains Data · IPB"},
     "3": {"judul": "Halaman 3", "nama": "Nama Teman 3", "unit": "Magang BMKG · IPB"},
@@ -395,8 +395,22 @@ def footer():
 
 
 # ------------------------------------------------------------------ filter
+_FS = """<style>html,body{margin:0;background:transparent;overflow:hidden}body{font-family:"Poppins","Segoe UI",Arial,sans-serif}button{width:100%;height:__H__px;border:1px solid rgba(255,255,255,.55);border-radius:8px;background:transparent;color:#fff;font:inherit;font-size:12px;cursor:pointer}button:hover{background:rgba(255,255,255,.12)}</style>
+<button id="b" onclick="go()">⛶ Layar penuh</button>
+<script>function go(){var b=document.getElementById('b'),f=function(){b.textContent='Tekan F11';};try{var d=window.parent.document; if(d.fullscreenElement){d.exitFullscreen();}else{var p=d.documentElement.requestFullscreen(); if(p&&p.catch){p.catch(f);}}}catch(e){f();}}</script>"""
+
+
+def fullscreen_btn(h=30):
+    html = _FS.replace("__H__", str(h))
+    if hasattr(st, "iframe"):
+        st.iframe(html, height=h + 2)
+    else:
+        import streamlit.components.v1 as components
+        components.html(html, height=h + 2)
+
+
 filt = st.container(key="filt")
-c1, c2, c3, c4, c5, c6 = filt.columns([1.2, 1.2, 1, 1.5, .55, .6])
+c1, c2, c3, c4, c5, c6, c7 = filt.columns([1.2, 1.2, 1, 1.4, .5, .62, .68])
 prov = c1.selectbox("Provinsi", ["ALL"] + PROVS, key="prov", format_func=lambda p: "Semua Provinsi" if p == "ALL" else pl(p))
 algo = c2.selectbox("Model", ["XGB", "HGB"], key="algo", format_func=lambda a: ALGO_NAME[a])
 src = c3.selectbox("Pendekatan", ["Pooled", "Per-provinsi"], key="src")
@@ -420,6 +434,9 @@ with c6.popover("ⓘ Catatan", use_container_width=True):
 - **RMSE, MAE, MAPE:** ukuran error prediksi (makin kecil makin baik); RMSE lebih menghukum error besar, MAPE dalam persen.
 - **Persistence:** baseline, suhu bulan depan dianggap sama dengan bulan ini. **Seasonal naive:** baseline, sama dengan bulan yang sama tahun lalu."""
     )
+
+with c7:
+    fullscreen_btn()
 
 if isinstance(rng, (tuple, list)) and len(rng) == 2:
     d0, d1 = pd.Timestamp(rng[0]).to_period("M").to_timestamp(), pd.Timestamp(rng[1]).to_period("M").to_timestamp("M")
