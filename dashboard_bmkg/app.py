@@ -354,7 +354,7 @@ def _p2_sub():
 PAGES = {
     "1": {"judul": "Dashboard utama", "title": "Dashboard Forecast Suhu Udara Pulau Jawa",
           "sub": "Pemantauan t2m, anomali, dan performa model ML untuk 6 provinsi, ERA5 + Niño 3.4",
-          "nama": "Abie Septian Wibowo", "unit": "Statistika dan Sains Data · IPB"},
+          "nama": "Nama Anda", "unit": "Magang BMKG · IPB"},
     "2": {"judul": "Proyeksi bulan kering Banten", "title": "Downscaling GCM Hujan untuk Proyeksi Kekeringan (SPI) di Banten",
           "sub": _p2_sub(), "nama": "Gemala Aleida Fitri", "unit": "Statistika dan Sains Data · IPB"},
     "3": {"judul": "Halaman 3", "nama": "Nama Teman 3", "unit": "Magang BMKG · IPB"},
@@ -545,7 +545,7 @@ def fig_temp():
         yr = [lo_v - .04 * rg, hi_v + .16 * rg]
     if len(o):
         fig.add_annotation(x=o["d"].iloc[-1], y=o["t"].iloc[-1], text=f"ERA5 terakhir<br><b>{fmt(o['t'].iloc[-1])} °C</b>", showarrow=True, arrowhead=2, arrowsize=.9,
-                           arrowwidth=1, arrowcolor=NAVY, ax=-44, ay=-30, font=dict(size=11, color=NAVY), bgcolor="rgba(255,255,255,.85)", borderpad=2)
+                           arrowwidth=1, arrowcolor=NAVY, ax=-62, ay=-10, font=dict(size=11, color=NAVY), bgcolor="rgba(255,255,255,.85)", borderpad=2)
     if len(f):
         pr = f.loc[f["p"].idxmax()]
         fig.add_annotation(x=pr["d"], y=pr["p"], text=f"Suhu tertinggi {mon_label(pr['d'])}<br><b>{fmt(pr['p'])} °C</b>", showarrow=True, arrowhead=2, arrowsize=.9,
@@ -855,8 +855,10 @@ def fig_bars(s):
 
 
 # ------------------------------------------------------------------ KPI
-f_nat = fc_for("ALL")
-f0, last, prev = f_nat.iloc[0], nat_obs.iloc[-1], nat_obs.iloc[-2]
+f_nat = fc_for(prov)   # kartu 1-4 mengikuti filter provinsi (Semua provinsi = rata-rata Jawa)
+_ko = nat_obs if prov == "ALL" else obs[obs["provinsi"] == prov].sort_values("tanggal")
+scope = "Jawa" if prov == "ALL" else pl(prov)
+f0, last, prev = f_nat.iloc[0], _ko.iloc[-1], _ko.iloc[-2]
 ml = met[(met["provinsi"] == "Semua provinsi") & (met["pendekatan"] != "Baseline")].sort_values("RMSE")
 best, second = ml.iloc[0], ml.iloc[1]
 nn = nino.sort_values("tanggal").iloc[-1]
@@ -882,9 +884,9 @@ cards = [
      f'Anomali <b class="{sg(last["anomali"])}">{fmt(last["anomali"], 2, True)} °C</b> vs normal {norm_period}'),
     ("key", f"Forecast {mon_label(ref)}" + (" (bulan ini)" if not BULAN_ACUAN and ref == _ref else ""), f'{fmt(fr["p"])} <small>°C</small>',
      f'Anomali <b class="{sg(fr["a"])}">{fmt(fr["a"], 2, True)} °C</b> · {h_ref} bln setelah data terakhir'),
-    ("", "Rerata anomali 12 bulan", f'<span class="{sg(f_nat["a"].mean())}">{fmt(f_nat["a"].mean(), 2, True)}</span> <small>°C</small>{chip(f_nat["a"].mean())}',
+    ("", f"Rerata anomali 12 bln · {scope}", f'<span class="{sg(f_nat["a"].mean())}">{fmt(f_nat["a"].mean(), 2, True)}</span> <small>°C</small>{chip(f_nat["a"].mean())}',
      f'{mon_label(f_nat["d"].iloc[0])} – {mon_label(f_nat["d"].iloc[-1])} · suhu {fmt(f_nat["p"].mean())} °C'),
-    ("key hot", "Puncak anomali forecast", f'<span class="{sg(pk["a"])}">{fmt(pk["a"], 2, True)}</span> <small>°C</small>',
+    ("key hot", f"Puncak anomali · {scope}", f'<span class="{sg(pk["a"])}">{fmt(pk["a"], 2, True)}</span> <small>°C</small>',
      f'{mon_label(pk["d"])} · suhu {fmt(pk["p"])} °C'),
     ("", "Model terbaik (RMSE)" + I("RMSE"), f'{fmt(best["RMSE"], 3)} <small>°C</small>',
      f'{best["pendekatan"]} · {str(best["model"]).replace("HistGradientBoosting", "HGB")} · unggul {fmt(second["RMSE"] - best["RMSE"], 3)} °C dari #2'),
