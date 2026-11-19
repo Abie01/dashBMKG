@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit.components.v1 as components
 
-# [INTEGRASI] EMBED=True bila file ini dijalankan dari app.py utama (halaman 2); header, filter gelap, dan tema ikut app.py.
+# [INTEGRASI] EMBED=True bila file ini dijalankan dari app.py utama (halaman 3); header, filter gelap, dan tema ikut app.py.
 # Dijalankan sendiri (streamlit run app_dashboard_spi.py) tampilannya tetap seperti semula, termasuk ?laporan=1.
 EMBED = bool(globals().get("EMBED", False))
 
@@ -117,7 +117,7 @@ KATA = {"sama": "belum beda nyata", "lebih": "lebih sering kering", "kurang": "l
 WARNA_KODE = {"sama": "gray", "lebih": "red", "kurang": "blue", "sedikit": "gray"}
 
 # ------------------------------------------------------------------ data
-FOLDER = os.environ.get("HASIL_DIR") or (globals().get("DATA_P2") if EMBED else None) or os.path.dirname(os.path.abspath(__file__))      # [INTEGRASI] dari app.py: data_dashboard/
+FOLDER = os.environ.get("HASIL_DIR") or (globals().get("DATA_DIR") if EMBED else None) or os.path.dirname(os.path.abspath(__file__))      # [INTEGRASI] dari app.py: data_dashboard/
 
 
 def jalur(nama):
