@@ -1,0 +1,9 @@
+split,model,dev13,mae,rmse,bias_pct,pr_auc,roc_auc,recall_top20
+holdout,Model,0.9999,0.4544,3.9398,-49.1373,0.6463,0.9823,0.2485
+holdout,Persistensi 7h,2.5179,0.4413,3.6144,-32.9904,0.5272,0.8969,0.227
+holdout,Laju 28h,1.9649,0.4431,4.0162,-63.3203,0.567,0.9461,0.2312
+holdout,Prediksi nol,11.7832,0.5225,5.1124,-100.0,,,
+walk-forward,Model,0.5513,0.1792,1.978,-22.7714,0.4523,0.9846,0.3398
+walk-forward,Persistensi 7h,1.2475,0.1935,2.1801,0.007,0.3305,0.8492,0.2689
+walk-forward,Laju 28h,0.9621,0.2145,2.2846,0.0114,0.2701,0.9141,0.2708
+walk-forward,Prediksi nol,3.6689,0.1632,2.5561,-100.0,,,

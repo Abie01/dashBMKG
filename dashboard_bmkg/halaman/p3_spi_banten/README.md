@@ -1,4 +1,6 @@
-# dashboard-spi-banten
+# dashboard-spi-banten (Halaman 3 pada dashboard gabungan)
+
+> Dalam dashboard gabungan halaman ini dijalankan oleh `app.py` (mode EMBED, data dari `../../data_dashboard/`). Baris perintah dan URL di bawah berlaku bila `app_dashboard_spi.py` dijalankan sendiri.
 
 Dashboard Streamlit proyeksi bulan kering (SPI ≤ −1) Banten, hasil downscaling GCM (CMCC-ESM2, SSP370).
 
