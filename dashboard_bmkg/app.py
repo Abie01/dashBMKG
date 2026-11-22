@@ -55,8 +55,19 @@ PAGES = {
     "3": {"judul": "Proyeksi bulan kering Banten", "title": "Downscaling GCM Hujan untuk Proyeksi Kekeringan (SPI) di Banten",
           "sub": _sub_spi(), "nama": "Gemala Aleida Fitri", "unit": "Statistika dan Sains Data · IPB",
           "file": os.path.join(HAL, "p3_spi_banten", "app_dashboard_spi.py"), "data": DATA_DASHBOARD, "keep": []},
-    "4": {"judul": "Halaman 4", "title": "Dashboard", "sub": "", "nama": "Nama Teman 4", "unit": "Magang BMKG · IPB",
-          "file": None, "data": None, "keep": []},
+    "4": {
+        "judul": "Climate Downscaling",
+        "title": "Climate Downscaling DCPP-B CMIP6 Indonesia",
+        "sub": "Forecast suhu udara (TAS) dan curah hujan (PR) | CNN/U-Net & Random Forest",
+        "nama": "Danella Nur Aisyah Latief",
+        "unit": "Sekolah Sains Data, Matematika, dan Informatika · IPB",
+        "file": os.path.join(HAL, "p4_climate_downscaling", "app_climate_downscaling.py"),
+        "data": os.environ.get(
+            "CLIMATE_DATA",
+            os.path.join(HERE, "data_climate_downscaling")
+        ),
+        "keep": [],},
+
 }
 
 SS = st.session_state
