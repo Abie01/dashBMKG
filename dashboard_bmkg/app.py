@@ -65,7 +65,7 @@ PAGES = {
         "title": "Climate Downscaling DCPP-B CMIP6 Indonesia",
         "sub": "Forecast suhu udara (TAS) dan curah hujan (PR) | CNN/U-Net & Random Forest",
         "nama": "Danella Nur Aisyah Latief",
-        "unit": "Sekolah Sains Data, Matematika, dan Informatika · IPB",
+        "unit": "Ilmu Komputer · IPB",
         "file": os.path.join(HAL, "p4_climate_downscaling", "app_climate_downscaling.py"),
         "data": os.environ.get(
             "CLIMATE_DATA",
