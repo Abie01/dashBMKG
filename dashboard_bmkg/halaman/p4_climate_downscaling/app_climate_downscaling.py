@@ -23,7 +23,7 @@ except ImportError:
 
     from shapely.vectorized import contains as contains_xy
 
-
+from tema import fullscreen_btn
 # ============================================================
 
 # 1. KONFIGURASI PROYEK & METRIK AKTUAL
@@ -50,7 +50,6 @@ FORECAST_DIR = (
 BOUNDARY_FILE = (
     BASE_DIR / "data" / "boundaries" / "countries.geojson"
 )
-
 
 FILES = {
 
@@ -1111,6 +1110,90 @@ def load_forecast(variable: str):
 
     }
 
+def inspect_ensemble_structure(variable: str):
+    dataset = load_forecast(variable)
+
+    for label in ["raw", "corrected"]:
+        da = dataset[label]
+
+        print(f"\n===== {label.upper()} =====")
+        print("Dimensi:", da.dims)
+        print("Ukuran:", da.sizes)
+
+        member_dim = find_dim(
+            da,
+            ["sample", "member", "ensemble", "realization", "variant"]
+        )
+
+        if member_dim is None:
+            print("Dimensi ensemble: TIDAK DITEMUKAN")
+        else:
+            print("Nama dimensi ensemble:", member_dim)
+            print("Koordinat ensemble:", da[member_dim].values)
+
+        lead_dim = find_dim(da, ["lead_year", "lead", "year"])
+
+        if lead_dim is not None:
+            print("Koordinat lead year:", da[lead_dim].values)
+
+
+def compute_lead_year_profile(
+    dataset: dict,
+    variable: str,
+    member_value: str,
+) -> pd.DataFrame:
+    """
+    Menghitung profil rata-rata forecast Raw dan Corrected
+    untuk Lead Year 1–10 pada grid daratan Indonesia.
+
+    Satuan mengikuti konfigurasi FILES.
+    """
+
+    records = []
+
+    for lead_year in range(1, 11):
+        selected = get_selected_arrays(
+            dataset,
+            variable,
+            lead_year,
+            member_value,
+        )
+
+        raw_valid = selected["raw"][
+            np.isfinite(selected["raw"])
+        ]
+
+        corrected_valid = selected["corrected"][
+            np.isfinite(selected["corrected"])
+        ]
+
+        difference_valid = selected["difference"][
+            np.isfinite(selected["difference"])
+        ]
+
+        if (
+            raw_valid.size == 0
+            or corrected_valid.size == 0
+            or difference_valid.size == 0
+        ):
+            raw_mean = np.nan
+            corrected_mean = np.nan
+            difference_mean = np.nan
+
+        else:
+            raw_mean = float(np.nanmean(raw_valid))
+            corrected_mean = float(np.nanmean(corrected_valid))
+            difference_mean = float(np.nanmean(difference_valid))
+
+        records.append({
+            "Lead Year": lead_year,
+            "Raw": raw_mean,
+            "Corrected": corrected_mean,
+            "Difference": difference_mean,
+        })
+
+    return pd.DataFrame(records)
+
 
 def get_selected_arrays(dataset: dict, variable: str, lead_year: int, member_value: str) -> dict:
 
@@ -1323,329 +1406,270 @@ def geometry_to_xy_lines(geom):
 
 # ============================================================
 
-def render_forecast_map(dataset: dict, arrays: dict, variable: str, display_mode: str, lead_year: int, member_label: str):
-
+def render_forecast_map(
+    dataset: dict,
+    arrays: dict,
+    variable: str,
+    display_mode: str,
+    lead_year: int,
+    member_label: str,
+):
     cfg = FILES[variable]
 
+    # ----------------------------------------------------------
+    # 1. Tentukan data dan palet warna
+    # ----------------------------------------------------------
     if display_mode == "Raw":
-
         z_source = arrays["raw_visual"]
-
         z_land = arrays["raw"]
-
         color_scale = cfg["scale"]
-
         color_title = f"Raw ({cfg['unit']})"
 
     elif display_mode == "Corrected":
-
         z_source = arrays["corrected_visual"]
-
         z_land = arrays["corrected"]
-
         color_scale = cfg["scale"]
-
         color_title = f"Corrected ({cfg['unit']})"
 
     else:
-
         z_source = arrays["difference_visual"]
-
         z_land = arrays["difference"]
-
         color_scale = "RdBu_r"
-
         color_title = f"Corrected − Raw ({cfg['unit']})"
 
-    # Jika grid sumber hanya memiliki data di dalam daratan (mis. CHIRPS/RF yang NaN di laut),
-
-    # tetap aman karena interpolate_bilinear_numpy melakukan fallback nearest-valid untuk pesisir.
-
     if not np.isfinite(z_land).any():
-
         st.warning(
-            "Tidak ada nilai valid di daratan Indonesia untuk kombinasi filter ini.")
-
+            "Tidak ada nilai valid di daratan Indonesia untuk kombinasi filter ini."
+        )
         return
 
+    # ----------------------------------------------------------
+    # 2. Siapkan grid visualisasi Indonesia
+    # ----------------------------------------------------------
     fine_lon, fine_lat, fine_mask = make_fine_land_mask(
-
         94.0, 142.0, -11.5, 6.8, 0.06, str(BOUNDARY_FILE)
-
     )
 
     fine_z = interpolate_bilinear_numpy(
-
-        dataset["lon"], dataset["lat"], z_source, fine_lon, fine_lat, fine_mask
-
+        dataset["lon"],
+        dataset["lat"],
+        z_source,
+        fine_lon,
+        fine_lat,
+        fine_mask,
     )
 
     valid_vals = fine_z[np.isfinite(fine_z)]
 
     if valid_vals.size == 0:
-
-        st.warning("Gagal memetakan nilai pada poligon daratan Indonesia.")
-
+        st.warning(
+            "Gagal memetakan nilai pada poligon daratan Indonesia."
+        )
         return
 
+    # ----------------------------------------------------------
+    # 3. Rentang warna
+    # ----------------------------------------------------------
     if display_mode == "Difference":
-
+        # Skala simetris dengan pusat nol.
         vmax = float(np.nanpercentile(np.abs(valid_vals), 98))
-
         vmax = max(vmax, 0.25)
 
         zmin, zmax = -vmax, vmax
 
     else:
+        # Raw dan Corrected menggunakan rentang warna bersama.
+        raw_values = np.asarray(
+            arrays["raw_visual"], dtype=float
+        )
+        corrected_values = np.asarray(
+            arrays["corrected_visual"], dtype=float
+        )
 
-        zmin = float(np.nanpercentile(valid_vals, 2))
+        raw_values = raw_values[np.isfinite(raw_values)]
+        corrected_values = corrected_values[
+            np.isfinite(corrected_values)
+        ]
 
-        zmax = float(np.nanpercentile(valid_vals, 98))
+        common_values = np.concatenate(
+            [raw_values, corrected_values]
+        )
 
+        if common_values.size == 0:
+            st.warning("Tidak tersedia nilai valid untuk skala warna.")
+            return
+
+        zmin = float(np.nanpercentile(common_values, 2))
+        zmax = float(np.nanpercentile(common_values, 98))
+
+        # Curah hujan memiliki batas bawah fisik nol.
+        if variable == "PR":
+            zmin = min(0.0, zmin)
+
+        # Hindari rentang warna nol.
         if np.isclose(zmin, zmax):
+            padding = max(abs(zmin) * 0.01, 0.5)
+            zmin -= padding
+            zmax += padding
 
-            zmin, zmax = float(np.nanmin(valid_vals)), float(
-                np.nanmax(valid_vals))
-
+    # ----------------------------------------------------------
+    # 4. Siapkan batas wilayah
+    # ----------------------------------------------------------
     fig = go.Figure()
 
-    # Konteks daratan negara tetangga (abu-abu netral agar Indonesia kontras).
+    indo_geom, neighbors_geom = load_geometries(
+        str(BOUNDARY_FILE)
+    )
 
-    indo_geom, neighbors_geom = load_geometries(str(BOUNDARY_FILE))
-
+    # Daratan negara tetangga.
     nx, ny = geometry_to_xy_lines(neighbors_geom)
 
     if nx:
+        fig.add_trace(
+            go.Scatter(
+                x=nx,
+                y=ny,
+                mode="lines",
+                fill="toself",
+                fillcolor="#E8EDF2",
+                line=dict(
+                    color="#C2CCD6",
+                    width=0.6,
+                ),
+                hoverinfo="skip",
+                showlegend=False,
+            )
+        )
 
-        fig.add_trace(go.Scatter(
+    # ----------------------------------------------------------
+    # 5. Layer raster forecast
+    # ----------------------------------------------------------
+    fig.add_trace(
+        go.Heatmap(
+            x=fine_lon,
+            y=fine_lat,
+            z=fine_z,
+            colorscale=color_scale,
+            zsmooth="best",
+            zmin=zmin,
+            zmax=zmax,
+            connectgaps=False,
+            hoverongaps=False,
+            colorbar=dict(
+                title=dict(
+                    text=color_title,
+                    font=dict(
+                        color="#172B3A",
+                        size=11,
+                    ),
+                ),
+                tickfont=dict(
+                    color="#52677A",
+                    size=10,
+                ),
+                thickness=13,
+                len=0.86,
+                outlinewidth=0,
+                x=1.02,
+            ),
+            hovertemplate=(
+                "Lintang: %{y:.2f}°"
+                "<br>Bujur: %{x:.2f}°"
+                f"<br>Nilai: %{{z:.2f}} {cfg['unit']}"
+                "<extra></extra>"
+            ),
+        )
+    )
 
-            x=nx, y=ny,
-
-            mode="lines",
-
-            fill="toself",
-
-            fillcolor="#DCE4EC",
-
-            line=dict(color="#B7C5D3", width=0.6),
-
-            hoverinfo="skip",
-
-            showlegend=False,
-
-        ))
-
-    # Layer raster halus yang sudah dipotong batas wilayah Indonesia.
-
-    fig.add_trace(go.Heatmap(
-
-        x=fine_lon,
-
-        y=fine_lat,
-
-        z=fine_z,
-
-        colorscale=color_scale,
-
-        zsmooth="best",
-
-        zmin=zmin,
-
-        zmax=zmax,
-
-        connectgaps=False,
-
-        hoverongaps=False,
-
-        colorbar=dict(
-
-            title=dict(text=color_title, font=dict(color="#172B3A", size=10)),
-
-            tickfont=dict(color="#172B3A", size=9),
-
-            thickness=11,
-
-            len=0.88,
-
-            outlinewidth=0,
-
-            x=1.01,
-
-        ),
-
-        hovertemplate=(
-
-            "Lat: %{y:.2f}° | Lon: %{x:.2f}°<br>"
-
-            f"Nilai: %{{z:.2f}} {cfg['unit']}<extra></extra>"
-
-        ),
-
-    ))
-
-    # Garis batas daratan Indonesia yang jelas.
-
+    # ----------------------------------------------------------
+    # 6. Garis batas Indonesia
+    # ----------------------------------------------------------
     ix, iy = geometry_to_xy_lines(indo_geom)
 
     if ix:
+        fig.add_trace(
+            go.Scatter(
+                x=ix,
+                y=iy,
+                mode="lines",
+                line=dict(
+                    color="#263B50",
+                    width=0.9,
+                ),
+                hoverinfo="skip",
+                showlegend=False,
+            )
+        )
 
-        fig.add_trace(go.Scatter(
-
-            x=ix, y=iy,
-
-            mode="lines",
-
-            line=dict(color="#142B45", width=0.85),
-
-            hoverinfo="skip",
-
-            showlegend=False,
-
-        ))
-
+    # ----------------------------------------------------------
+    # 7. Layout peta
+    # ----------------------------------------------------------
     fig.update_layout(
-
-        height=320,
-
-        margin=dict(l=6, r=8, t=6, b=24),
-
+        height=390,
+        margin=dict(
+            l=8,
+            r=42,
+            t=8,
+            b=30,
+        ),
         paper_bgcolor="#FFFFFF",
-
-        plot_bgcolor="#EDF3F8",
-
-        font=dict(family="Aptos, Segoe UI, Arial", color="#172B3A", size=10),
-
+        plot_bgcolor="#F2F5F8",
+        font=dict(
+            family="Aptos, Segoe UI, Arial",
+            color="#172B3A",
+            size=10,
+        ),
         xaxis=dict(
-
-            title=dict(text="Bujur (°BT)", font=dict(
-                size=10, color="#52677A")),
-
-            range=[94.2, 141.8],
-
-            gridcolor="#DFE7EE",
-
-            tickfont=dict(size=9, color="#52677A"),
-
-            zeroline=False,
-
-        ),
-
+            title=dict(
+                text="Bujur (°BT)",
+                font=dict(
+                    size=10,
+                    color="#52677A",
+                ),
+            ),
+                range=[94.2, 141.8],
+                gridcolor="#DFE7EE",
+                tickfont=dict(
+                    size=9,
+                    color="#52677A",
+                ),
+                zeroline=False,
+            ),
         yaxis=dict(
-
-            title=dict(text="Lintang (°)", font=dict(
-                size=10, color="#52677A")),
-
-            range=[-11.4, 6.6],
-
-            gridcolor="#DFE7EE",
-
-            tickfont=dict(size=9, color="#52677A"),
-
-            scaleanchor="x",
-
-            scaleratio=1,
-
-            zeroline=False,
-
-        ),
-
-        dragmode="pan",
-
-        showlegend=False,
-
-    )
+            title=dict(
+                text="Lintang (°)",
+                font=dict(
+                    size=10,
+                    color="#52677A",
+                ),
+            ),
+                range=[-11.4, 6.6],
+                gridcolor="#DFE7EE",
+                tickfont=dict(
+                    size=9,
+                    color="#52677A",
+               ),
+                scaleanchor="x",
+                scaleratio=1,
+                zeroline=False,
+            ),
+            dragmode="pan",
+            showlegend=False,
+        )
 
     st.plotly_chart(
-
-        fig,
-
-        use_container_width=True,
-
-        config={
-
-            "displayModeBar": True,
-
-            "scrollZoom": True,
-
-            "displaylogo": False,
-
-            "modeBarButtonsToRemove": ["lasso2d", "select2d"],
-
+            fig,
+            use_container_width=True,
+            config={
+                "displayModeBar": True,
+                "scrollZoom": True,
+                "displaylogo": False,
+                "modeBarButtonsToRemove": [
+                    "lasso2d",
+                    "select2d",
+                ],
         },
-
     )
-
-
-@st.cache_data(show_spinner=False)
-def compute_lead_year_profile(_dataset: dict, variable: str, member_value: str) -> pd.DataFrame:
-
-    raw_da = select_member(_dataset["raw"], member_value)
-
-    corr_da = select_member(_dataset["corrected"], member_value)
-
-    mask = make_land_mask(
-
-        tuple(float(v) for v in _dataset["lat"]),
-
-        tuple(float(v) for v in _dataset["lon"]),
-
-        str(BOUNDARY_FILE),
-
-    )
-
-    records = []
-
-    for lead in range(1, 11):
-
-        raw_slice = select_lead(raw_da, lead)
-
-        corr_slice = select_lead(corr_da, lead)
-
-        raw_vals = convert_units(
-
-            as_lat_lon_array(
-                raw_slice, _dataset["raw_lat_name"], _dataset["raw_lon_name"]),
-
-            raw_slice,
-
-            variable,
-
-        )
-
-        corr_vals = convert_units(
-
-            as_lat_lon_array(
-                corr_slice, _dataset["corr_lat_name"], _dataset["corr_lon_name"]),
-
-            corr_slice,
-
-            variable,
-
-        )
-
-        raw_vals = np.where(mask, raw_vals, np.nan)
-
-        corr_vals = np.where(mask, corr_vals, np.nan)
-
-        mean_raw = float(np.nanmean(raw_vals)) if np.isfinite(
-            raw_vals).any() else np.nan
-
-        mean_corr = float(np.nanmean(corr_vals)) if np.isfinite(
-            corr_vals).any() else np.nan
-
-        records.append({
-
-            "Lead Year": lead,
-
-            "Raw": mean_raw,
-
-            "Corrected": mean_corr,
-
-            "Difference": mean_corr - mean_raw if np.isfinite(mean_raw) and np.isfinite(mean_corr) else np.nan,
-
-        })
-
-    return pd.DataFrame(records)
 
 
 def render_lead_year_chart(profile_df: pd.DataFrame, variable: str, active_lead: int):
@@ -1900,36 +1924,155 @@ def render_model_comparison_chart(comparison_df: pd.DataFrame, metric_choice: st
 
 
 # ============================================================
+
+def render_distribution_chart(selected, variable):
+    """
+    Distribusi nilai Raw dan Corrected pada grid daratan Indonesia.
+    Hanya menggunakan pasangan grid yang valid pada kedua dataset.
+    """
+    raw = np.asarray(selected["raw"], dtype=float)
+    corrected = np.asarray(selected["corrected"], dtype=float)
+    land_mask = np.asarray(selected["land_mask"], dtype=bool)
+
+    valid_mask = (
+        land_mask
+        & np.isfinite(raw)
+        & np.isfinite(corrected)
+    )
+
+    raw_values = raw[valid_mask]
+    corrected_values = corrected[valid_mask]
+
+    if raw_values.size == 0:
+        st.info("Tidak tersedia grid valid untuk membuat distribusi.")
+        return
+
+    cfg = FILES[variable]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Histogram(
+        x=raw_values,
+        name="Raw (DCPP-B)",
+        nbinsx=35,
+        histnorm="probability",
+        bingroup="climate_distribution",
+        opacity=0.65,
+        marker=dict(
+            color="#6686A5",
+            line=dict(color="#496985", width=0.5)
+        ),
+        hovertemplate=(
+            "Raw: %{x:.2f}<br>"
+            "Proporsi grid: %{y:.3f}<extra></extra>"
+        ),
+    ))
+
+    fig.add_trace(go.Histogram(
+        x=corrected_values,
+        name=f"Corrected ({cfg['model']})",
+        nbinsx=35,
+        histnorm="probability",
+        bingroup="climate_distribution",
+        opacity=0.65,
+        marker=dict(
+            color="#078B91",
+            line=dict(color="#066D73", width=0.5)
+        ),
+        hovertemplate=(
+            "Corrected: %{x:.2f}<br>"
+            "Proporsi grid: %{y:.3f}<extra></extra>"
+        ),
+    ))
+
+    fig.update_layout(
+        height=265,
+        barmode="overlay",
+        margin=dict(l=42, r=15, t=28, b=42),
+        paper_bgcolor="#FFFFFF",
+        plot_bgcolor="#FFFFFF",
+        font=dict(
+            family="Aptos, Segoe UI, Arial",
+            size=10,
+            color="#172B3A"
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            x=0,
+            font=dict(size=9)
+        ),
+        xaxis=dict(
+            title=f"{cfg['short_label']} ({cfg['unit']})",
+            gridcolor="#E6EDF3",
+            zeroline=False,
+        ),
+        yaxis=dict(
+            title="Proporsi grid",
+            gridcolor="#E6EDF3",
+            rangemode="tozero",
+        ),
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config={"displayModeBar": False}
+    )
+
+    st.caption(
+        f"Distribusi dihitung dari {raw_values.size:,} grid daratan "
+        "yang memiliki pasangan nilai Raw dan Corrected valid. "
+        "Histogram menunjukkan distribusi spasial, bukan distribusi temporal."
+    )
+
+
+
 # ============================================================
 # 5. DASHBOARD — FORECAST DCPP-B s2020
 # ============================================================
-st.markdown("""
-<div class="hero">
-  <div>
-    <div class="hero-kicker">BMKG · Direktorat Perubahan Iklim · Climate Prediction Dashboard</div>
-    <h1>Downscaling &amp; Bias Correction Prediksi Iklim Dekadal Indonesia</h1>
-    <p>CMIP6-DCPP · CMCC-CM2-SR5 · Resolusi kerja observasi ~0,25° (ERA5 &amp; CHIRPS v2.0)</p>
-  </div>
-  <div class="hero-meta">
-    <strong>Forecast DCPP-B · Inisialisasi s2020</strong>
-    Indonesia · Ensemble r1–r5 · 10 Lead Years
-  </div>
-</div>
-""", unsafe_allow_html=True)
+
 
 # Filter utama: ensemble mean menjadi tampilan awal, tetapi anggota ensemble tetap dapat dipilih.
-f1, f2, f3, f4 = st.columns([1.45, 0.8, 1.45, 1.0], gap="small")
+# Filter utama: ensemble mean menjadi tampilan awal,
+# tetapi anggota ensemble tetap dapat dipilih.
+filt = st.container(key="filt")
+f1, f2, f3, f4, f5 = filt.columns(
+    [1.45, 0.8, 1.45, 1.0, 0.68],
+    gap="small"
+)
+
 with f1:
     variable = st.selectbox(
-        "Variabel Iklim", ["TAS", "PR"], format_func=lambda x: FILES[x]["label"])
+        "Variabel Iklim",
+        ["TAS", "PR"],
+        format_func=lambda x: FILES[x]["label"]
+    )
+
 with f2:
-    lead_year = st.selectbox("Lead Year", list(range(1, 11)), index=0)
+    lead_year = st.selectbox(
+        "Lead Year",
+        list(range(1, 11)),
+        index=0
+    )
+
 with f3:
     member_label = st.selectbox(
-        "Ensemble Member", list(MEMBER_OPTIONS.keys()), index=0)
+        "Ensemble Member",
+        list(MEMBER_OPTIONS.keys()),
+        index=0
+    )
+
 with f4:
-    st.markdown('<div style="height:1.18rem"></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="height:1.18rem"></div>',
+        unsafe_allow_html=True
+    )
     export_placeholder = st.empty()
+
+with f5:
+    fullscreen_btn()
 
 member_value = MEMBER_OPTIONS[member_label]
 cfg = FILES[variable]
@@ -2018,15 +2161,41 @@ else:
         )
 
         # Profil 10 lead years menggunakan anggota ensemble yang dipilih.
-        with panel_box():
-            st.markdown(
-                f'<div class="panel-title">03 · Profil Forecast 10 Tahun — {cfg["short_label"]}</div>'
-                f'<div class="panel-sub">Rata-rata spasial daratan Indonesia · {member_label} · garis tegak menunjukkan LY {lead_year}</div>',
-                unsafe_allow_html=True,
-            )
-            profile_df = compute_lead_year_profile(
-                forecast_dataset, variable, member_value)
-            render_lead_year_chart(profile_df, variable, lead_year)
+
+        # Profil forecast dan distribusi nilai dalam satu baris.
+        profile_col, distribution_col = st.columns(
+            [1.15, 1],
+            gap="medium"
+        )
+
+        with profile_col:
+            with panel_box():
+                st.markdown(
+                    f'<div class="panel-title">03 · Profil Forecast 10 Tahun — {cfg["short_label"]}</div>'
+                    f'<div class="panel-sub">Rata-rata spasial daratan Indonesia · {member_label}</div>',
+                    unsafe_allow_html=True,
+                )
+
+                profile_df = compute_lead_year_profile(
+                    forecast_dataset, variable, member_value
+                )
+
+                render_lead_year_chart(
+                    profile_df, variable, lead_year
+                )
+
+        with distribution_col:
+            with panel_box():
+                st.markdown(
+                    f'<div class="panel-title">04 · Distribusi Raw vs Corrected — {cfg["short_label"]}</div>'
+                    f'<div class="panel-sub">Distribusi nilai grid daratan Indonesia · Lead Year {lead_year} · {member_label}</div>',
+                    unsafe_allow_html=True,
+                )
+
+                render_distribution_chart(
+                    selected, variable
+                )
+
 
         # Evaluasi historis dan perbandingan kandidat dipertahankan sebagai konteks,
         # bukan dianggap sebagai verifikasi forecast DCPP-B s2020.
@@ -2034,7 +2203,7 @@ else:
         with hist_col:
             with panel_box():
                 st.markdown(
-                    f'<div class="panel-title">04 · Evaluasi Historis {variable} (DCPP-A)</div>'
+                    f'<div class="panel-title">05 · Evaluasi Historis {variable} (DCPP-A)</div>'
                     f'<div class="panel-sub">Uji historis terhadap {cfg["obs"]} · bukan verifikasi forecast s2020</div>',
                     unsafe_allow_html=True,
                 )
@@ -2061,7 +2230,7 @@ else:
         with cmp_col:
             with panel_box():
                 st.markdown(
-                    f'<div class="panel-title">05 · Perbandingan Kandidat Model ML vs DL ({variable})</div>'
+                    f'<div class="panel-title">06 · Perbandingan Kandidat Model ML vs DL ({variable})</div>'
                     '<div class="panel-sub">Rekap evaluasi historis · nilai yang belum tersedia tidak ditampilkan sebagai nol</div>',
                     unsafe_allow_html=True,
                 )
