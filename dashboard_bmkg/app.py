@@ -2,7 +2,8 @@
 
 Jalankan : streamlit run app.py           (dari folder ini)
 Cangkang : file ini hanya mengurus tema, header, pilihan halaman, dan memanggil kode tiap halaman.
-Halaman  : 1 = Hotspot Kalimantan (halaman/p1_hotspot_kalimantan/)   data: data_hotspot/
+Halaman  : 0 = Beranda: ringkasan keempat proyek (halaman/beranda/)
+           1 = Hotspot Kalimantan (halaman/p1_hotspot_kalimantan/)   data: data_hotspot/
            2 = Forecast Suhu Jawa (halaman/p2_suhu_jawa/)            data: data_dashboard/
            3 = Proyeksi bulan kering Banten (halaman/p3_spi_banten/) data: data_dashboard/
            4 = kosong (menunggu isi)
@@ -42,6 +43,10 @@ def _sub_spi():
 # "keep"  : key widget yang pilihannya dipertahankan saat pindah halaman dan kembali lagi.
 # "file"  : skrip halaman (None = halaman kosong).   "data": folder data yang diberikan ke halaman sebagai DATA_DIR.
 PAGES = {
+    "0": {"judul": "Beranda", "title": "Dashboard Magang BMKG × IPB",
+          "sub": "Ringkasan empat proyek: hotspot Kalimantan, suhu Jawa, kekeringan Banten, dan climate downscaling",
+          "nama": "Magang BMKG × IPB", "unit": "Statistika dan Sains Data · IPB",
+          "file": os.path.join(HAL, "beranda", "app_beranda.py"), "data": HERE, "keep": []},
     "1": {"judul": "Hotspot Kalimantan", "title": "Dashboard Peramalan Hotspot Kalimantan",
           "sub": "Hotspot kecamatan, iklim ERA5, dan performa model LightGBM untuk 5 provinsi",
           "nama": "Muhammad Rafif Danuja", "unit": "Statistika dan Sains Data · IPB",
@@ -75,9 +80,9 @@ SS = st.session_state
 # Streamlit membuang pilihan widget yang tidak ditampilkan pada satu putaran, jadi filter sebuah halaman kembali ke bawaan
 # setelah pindah halaman. Solusi: pilihan halaman aktif disalin ke SS["_keep"] di tiap putaran; bila halaman itu tampil
 # lagi dan key-nya hilang, nilai ditulis ulang lewat session_state SEBELUM widget dibuat (hanya cara ini yang dipakai widget).
-_cur = SS.get("page") or "1"
+_cur = SS.get("page") or "0"
 if _cur not in PAGES:
-    _cur = "1"
+    _cur = "0"
 _keep = SS.setdefault("_keep", {})
 for _k in PAGES[_cur]["keep"]:
     if _k in SS:
@@ -92,7 +97,7 @@ st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(header_html(ID["title"], ID["sub"], ID["nama"], ID["unit"]), unsafe_allow_html=True)
 
 with st.container(key="pgnav"):
-    PAGE = st.selectbox("Halaman", list(PAGES), key="page", label_visibility="collapsed", format_func=lambda k: f"Halaman {k}")
+    PAGE = st.selectbox("Halaman", list(PAGES), key="page", label_visibility="collapsed", format_func=lambda k: "Beranda" if k == "0" else f"Halaman {k}")
 
 # ------------------------------------------------------------------ isi halaman
 ID = PAGES[PAGE]
