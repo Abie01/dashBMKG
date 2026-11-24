@@ -29,12 +29,40 @@ PROYEK = [
      "kpi": [("26,3%", "bulan kering SPI-3"), ("16,2%", "acuan CHIRPS"), ("20", "anggota ensemble")],
      "temuan": "Frekuensi bulan kering proyeksi lebih tinggi dari acuan pengamatan; satu GCM dan satu skenario, jadi dibaca sebagai proyeksi bersyarat, bukan prediksi.",
      "tag": ["CMCC-ESM2 · SSP370", "XGBoost", "SPI-3/6/12", "CHIRPS"]},
-    {"k": "4", "warna": "#7b61a8", "wilayah": "Indonesia", "judul": "Climate downscaling DCPP-B CMIP6",
-     "nama": "Danella Nur Aisyah Latief", "mentor": "Kadarsah, M.Si",
-     "tanya": "Dapatkah keluaran model iklim kasar diturunkan ke resolusi lebih halus untuk suhu dan hujan?",
-     "kpi": [("2", "variabel: TAS, PR"), ("2", "metode"), ("CMIP6", "DCPP-B")],
-     "temuan": "Downscaling suhu udara (TAS) dan curah hujan (PR) dari keluaran model iklim DCPP-B CMIP6 dengan CNN/U-Net dan Random Forest. Ringkasan hasil menyusul (diisi pemilik halaman).",
-     "tag": ["CNN / U-Net", "Random Forest", "TAS", "PR"]},
+   
+{
+    "k": "4",
+    "warna": "#7b61a8",
+    "wilayah": "Indonesia",
+    "judul": "Climate downscaling DCPP-B CMIP6",
+    "nama": "Danella Nur Aisyah Latief",
+    "mentor": "Kadarsah, M.Si",
+
+    "tanya": "Bagaimana meningkatkan resolusi spasial dan memperbaiki kualitas forecast suhu udara dan curah hujan dari model iklim CMIP6?",
+
+    "kpi": [
+        ("2", "variabel iklim: TAS & PR"),
+        ("5", "kandidat ML/DL diuji"),
+        ("10", "lead year forecast")
+    ],
+
+    "temuan": (
+        "Evaluasi historis DCPP-A menunjukkan penurunan RMSE sekitar 76,3% "
+        "pada TAS menggunakan CNN/U-Net dan 50,4% pada PR menggunakan "
+        "Random Forest dibandingkan data mentah. Model terpilih kemudian "
+        "diterapkan pada forecast DCPP-B s2020 untuk Indonesia."
+    ),
+
+    "tag": [
+        "CMIP6-DCPP",
+        "CMCC-CM2-SR5",
+        "CNN / U-Net",
+        "Random Forest",
+        "TAS · ERA5",
+        "PR · CHIRPS"
+    ]
+},
+
 ]
 
 st.markdown("""<style>
