@@ -22,6 +22,11 @@ Perubahan v-kontras:
   - skala warna peta mengikuti sebaran data, bukan batas naik-turun alami
   - peta dikunci (tidak bisa zoom/geser/scroll)
   - panel baru: deret SPI bulanan, heatmap peluang kering, ringkasan 3 jangka, tabel gerbang model, cara membaca tiap panel
+
+Perubahan v-kartu (penyesuaian tema, hanya mode EMBED):
+  - tiap grafik utama dibungkus kartu putih (container p3c_*) bergaya sama dengan kartu halaman lain
+  - KPI_CSS dan SUM_CSS memakai garis atas 3px, radius 10px, dan bayangan tipis
+  - CSS_EMBED dibatasi ke .st-key-p3 sehingga tidak memengaruhi cangkang
 """
 import json
 import math
@@ -79,7 +84,7 @@ def _ukuran_layar():
 
 VH, VW = (None, None) if LAPORAN else _ukuran_layar()
 FSKALA = float(np.clip(VW / 1366, 1.0, 1.45)) if VW else 1.0       # layar lebar (mis. layar penuh 1080p): huruf dan kartu ikut membesar
-OVERHEAD_EMBED = 214                  # [INTEGRASI] header + bilah filter + footer app.py + jarak antar-elemen (px, tanpa kartu angka)
+OVERHEAD_EMBED = 226                  # [INTEGRASI] header + bilah filter + footer app.py + jarak antar-elemen + border kartu (px, tanpa kartu angka)
 OVERHEAD = (OVERHEAD_EMBED if EMBED else 92) + (H_KPI + H_BAN + H_SUM + 8) * FSKALA                           # tinggi bagian atas (judul, kontrol, kartu), footer, dan jarak antar-elemen
 if str(st.query_params.get("tinggi", "")).isdigit(): H_KECIL = _angka("tinggi", H_KECIL, 120, 700)       # paksa manual
 elif VH: H_KECIL = int(np.clip((VH - OVERHEAD - 10) / 2, 120, 700))                                       # otomatis: dua baris grafik mengisi sisa tinggi layar
@@ -131,6 +136,17 @@ h3 {color:#1f6fb5;}
 .jawab {font-size:1.1rem; background:#dbe8f5; border-left:6px solid #1f6fb5; border-radius:6px; padding:.7rem 1rem; line-height:1.5;}
 </style>"""
 if not EMBED: st.markdown((CSS_UMUM + (CSS_LAP if LAPORAN else CSS_DASH)).replace("__UT__", str(UKURAN_TEKS_LAPORAN if LAPORAN else UKURAN_TEKS)), unsafe_allow_html=True)
+
+# [TEMA] gaya kartu untuk mode EMBED; semua selector dibatasi ke .st-key-p3 (wadah halaman 3 dari app.py) agar cangkang tidak terpengaruh
+CSS_EMBED = """<style>
+.st-key-p3 [class*="st-key-p3c_"]{background:#fff;border:1px solid #dde4ec;border-radius:10px;box-shadow:0 1px 2px rgba(11,42,74,.06);overflow:hidden;padding:0 !important;gap:0 !important;box-sizing:border-box;}
+.st-key-p3 [class*="st-key-p3c_"] [data-testid="stPlotlyChart"]{margin:0 !important;}
+.st-key-p3 .st-key-filt2 button[aria-checked="true"], .st-key-p3 .st-key-filt2 button[aria-pressed="true"], .st-key-p3 .st-key-filt2 [data-testid="stBaseButton-segmented_controlActive"]{background:#1f6fb5 !important;border-color:#1f6fb5 !important;}
+.st-key-p3 [data-testid="stExpander"]{background:#fff;border:1px solid #dde4ec !important;border-radius:10px !important;box-shadow:0 1px 2px rgba(11,42,74,.06);}
+.st-key-p3 [data-testid="stExpander"] summary p{font-size:12px !important;font-weight:600;color:#0b2a4a;}
+.st-key-p3 [data-testid="stAlert"]{border-radius:10px;font-size:12px;}
+</style>"""
+if EMBED: st.markdown(CSS_EMBED, unsafe_allow_html=True)
 
 PROY, BASE, ABU = BLUE, INK2, "#7f95ad"      # biru = proyeksi, abu tua = masa lalu model, abu sedang = pembanding (lebih tegas dari BLUE_LINE)
 TRANSF = TEAL                                # hijau-biru = model yang frekuensinya paling dekat pengamatan
@@ -441,16 +457,17 @@ def keyakinan(R, am):
 
 
 KPI_CSS = """<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 body {margin:0; padding:2px 1px 0; zoom:__Z__; background:__BG__; font-family:"Poppins", "Segoe UI", Arial, sans-serif; color:#10243b; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
 .kpi {display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px;}
-.tile {background:#fff; border:1px solid #dde4ec; border-top:4px solid var(--c); border-radius:7px; padding:5px 10px 6px; height:88px; box-sizing:border-box; overflow:hidden;}
+.tile {background:#fff; border:1px solid #dde4ec; border-top:3px solid var(--c); border-radius:10px; box-shadow:0 1px 2px rgba(11,42,74,.06); padding:5px 10px 6px; height:88px; box-sizing:border-box; overflow:hidden;}
 .k {font-size:10.5px; font-weight:700; color:#44566c; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .v {font-size:24px; font-weight:700; line-height:1.15; white-space:nowrap; color:#10243b;}
 .v small {font-size:11px; font-weight:500; color:#5b6b7f;}
 .s {font-size:11px; color:#44566c; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .chip {max-width:100%; overflow:hidden; text-overflow:ellipsis; vertical-align:top; display:inline-block; padding:0 8px; border-radius:9px; font-size:10px; font-weight:700; color:#fff; margin-top:2px; white-space:nowrap;}
 .red {background:#e60000;} .blue {background:#37a800;} .gray {background:#5b6b7f;} .amber {background:#e8710a;} .green {background:#0f8b8d;}
-.verd {background:#fff; border:1px solid #dde4ec; border-left:6px solid var(--c); border-radius:6px; padding:5px 10px; font-size:14px; line-height:1.3; margin:0 1px 7px;}
+.verd {background:#fff; border:1px solid #dde4ec; border-left:6px solid var(--c); border-radius:10px; box-shadow:0 1px 2px rgba(11,42,74,.06); padding:5px 10px; font-size:14px; line-height:1.3; margin:0 1px 7px;}
 .verd small {display:block; font-size:11px; color:#44566c; margin-top:2px; line-height:1.3;}
 .dot {display:inline-block; width:11px; height:11px; border-radius:50%; margin:0 2px 0 0; vertical-align:middle; background:#d9dee4;} .dot.ok {background:#0f8b8d;} .dot.no {background:#e8710a;}
 .insrow {margin-top:7px; white-space:nowrap; overflow:hidden;}
@@ -894,24 +911,28 @@ iframe(kh, int((H_KPI + H_BAN) * FSKALA))
 
 col_peta, col_b, col_c = st.columns([4.2, 3.9, 3.9], gap="small")
 with col_peta:
-    G_ = selisih_gcm(skala, PRESET[musim], t0, t1)
-    if mode == "Sebelum" and G_ is None: st.info("Peta sebelum downscaling belum bisa ditampilkan: berkas sel GCM (dashboard_gcm_sel.csv.gz) belum ada di folder dashboard. Jalankan sel 14k di notebook, lalu taruh berkasnya di folder ini. Pilih Sesudah (5 km) untuk melihat peta hasil downscaling.")
-    else: gambar(peta_dari(R, mode, H_PETA, LEBAR_PETA, G=G_), H_PETA, tetap=True, judul={"Sesudah": "Peta · selisih · sesudah downscaling (5 km)", "Sebelum": "Peta · selisih · sebelum downscaling (sel GCM)"}[mode], legenda=True, leg_pos="dalam")
+    with st.container(key="p3c_peta"):
+        G_ = selisih_gcm(skala, PRESET[musim], t0, t1)
+        if mode == "Sebelum" and G_ is None: st.info("Peta sebelum downscaling belum bisa ditampilkan: berkas sel GCM (dashboard_gcm_sel.csv.gz) belum ada di folder dashboard. Jalankan sel 14k di notebook, lalu taruh berkasnya di folder ini. Pilih Sesudah (5 km) untuk melihat peta hasil downscaling.")
+        else: gambar(peta_dari(R, mode, H_PETA, LEBAR_PETA, G=G_), H_PETA, tetap=True, judul={"Sesudah": "Peta · selisih · sesudah downscaling (5 km)", "Sebelum": "Peta · selisih · sebelum downscaling (sel GCM)"}[mode], legenda=True, leg_pos="dalam")
 with col_b:
-    gambar(fig_tahun(R), H_KECIL, judul="Per tahun", legenda=True)
-    gambar(fig_bulan(R), H_KECIL, judul="Per bulan", legenda=True)
+    with st.container(key="p3c_tahun"): gambar(fig_tahun(R), H_KECIL, judul="Per tahun", legenda=True)
+    with st.container(key="p3c_bulan"): gambar(fig_bulan(R), H_KECIL, judul="Per bulan", legenda=True)
 with col_c:
-    if len(R["rk"]): gambar(fig_kab(R), H_KECIL, judul="Per kab/kota", legenda=True)
-    else: st.caption("Batas kab/kota belum tersedia.")
-    if len(sm) >= 2: gambar(fig_model(sm, compact=True, amb=R["amb"]), H_KECIL, judul=("Per model" if len(R["bulan"]) == 12 else "Per model · semua bulan"), legenda=True)
-    else: st.caption("Data perbandingan model belum ada.")
+    with st.container(key="p3c_kab"):
+        if len(R["rk"]): gambar(fig_kab(R), H_KECIL, judul="Per kab/kota", legenda=True)
+        else: st.caption("Batas kab/kota belum tersedia.")
+    with st.container(key="p3c_model"):
+        if len(sm) >= 2: gambar(fig_model(sm, compact=True, amb=R["amb"]), H_KECIL, judul=("Per model" if len(R["bulan"]) == 12 else "Per model · semua bulan"), legenda=True)
+        else: st.caption("Data perbandingan model belum ada.")
 
 # ------------------------------------------------------------------ baris bawah: ringkasan tiga jangka (satu baris kartu)
 SUM_CSS = """<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 body {margin:0; padding:2px 1px 0; zoom:__Z__; background:#eef2f7; font-family:"Poppins","Segoe UI",Arial,sans-serif; color:#10243b;}
 .g3 {display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px;}
-.t3 {background:#fff; border:1px solid #dde4ec; border-left:5px solid var(--c); border-radius:7px; padding:5px 10px; height:92px; box-sizing:border-box; overflow:hidden;}
-.t3.on {box-shadow:0 0 0 2px #1f6fb533; border-color:#1f6fb5; border-left-color:var(--c);}
+.t3 {background:#fff; border:1px solid #dde4ec; border-top:3px solid var(--c); border-radius:10px; box-shadow:0 1px 2px rgba(11,42,74,.06); padding:5px 10px; height:92px; box-sizing:border-box; overflow:hidden;}
+.t3.on {box-shadow:0 0 0 2px #1f6fb533; border-color:#1f6fb5; border-top-color:var(--c);}
 .k {font-size:10.5px; font-weight:700; color:#44566c; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap;}
 .r {display:flex; align-items:baseline; gap:6px; white-space:nowrap;}
 .v {font-size:22px; font-weight:700; line-height:1.2;} .v small {font-size:11px; font-weight:500; color:#5b6b7f;}
