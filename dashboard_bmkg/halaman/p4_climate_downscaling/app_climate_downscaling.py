@@ -14,7 +14,8 @@ except ImportError:
 
 if not globals().get("EMBED"):   # halaman ini tidak berdiri sendiri: tema, header, dan navigasi ada di app.py
     st.set_page_config(page_title="Dashboard BMKG", layout="wide")
-    st.error("Halaman ini dijalankan lewat cangkang. Jalankan dashboard melalui app.py utama.")
+    st.error(
+        "Halaman ini dijalankan lewat cangkang. Jalankan dashboard melalui app.py utama.")
     st.stop()
 
 from tema import BLUE, GRID, INK, INK2, NAVY, ORANGE, TEAL, ZERO, fullscreen_btn  # noqa: E402
@@ -49,7 +50,7 @@ MEMBER_OPTIONS = {"Ensemble Mean (r1–r5)": "mean", "r1i1p1f1": "r1i1p1f1", "r2
 # di masing-masing variabel (TAS: n=420.000; PR: n=110.700).
 
 HISTORICAL_METRICS = {
-        "TAS": {
+    "TAS": {
         "Raw": {
             "RMSE": 1.3321810130,
             "MAE": 1.0558805497,
@@ -63,7 +64,7 @@ HISTORICAL_METRICS = {
             "Bias": -0.1484367926,
         },
     },
-         "PR": {
+    "PR": {
         "Raw": {
             "RMSE": 2.9404251780,
             "MAE": 2.2719264923,
@@ -93,7 +94,7 @@ MODEL_COMPARISON = {
          0.3237863529, 0.2312258680, 0.9682100427, -0.0589974001),
 
         ("CNN (U-Net)", "DL",
-        0.3157472274, 0.2381506738, 0.9757628949, -0.1484367926),
+         0.3157472274, 0.2381506738, 0.9757628949, -0.1484367926),
 
         ("ConvLSTM", "DL",
          0.3605587628, 0.2599810974, 0.9609855881, -0.0778852145),
@@ -109,9 +110,9 @@ MODEL_COMPARISON = {
         ("ANN", "ML",
          1.5324731043, 1.1681379525, 0.8179326207, 0.0108321432),
 
-       ("CNN (grid penuh)", "DL",
- 1.4340780885, 1.0917004366, 0.8395209504, -0.0952801708),
- 
+        ("CNN (grid penuh)", "DL",
+         1.4340780885, 1.0917004366, 0.8395209504, -0.0952801708),
+
         ("ConvLSTM", "DL",
          1.7258580810, 1.3085044638, 0.7626431547, -0.2093408660),
     ],
@@ -169,14 +170,17 @@ def get_variable(ds, name):
         return ds[name]
     if len(ds.data_vars) == 1:
         return ds[next(iter(ds.data_vars))]
-    raise KeyError(f"Variabel '{name}' tidak ditemukan. Tersedia: {list(ds.data_vars)}")
+    raise KeyError(
+        f"Variabel '{name}' tidak ditemukan. Tersedia: {list(ds.data_vars)}")
 
 
 def get_lat_lon(da):
-    la, lo = find_coord(da, ["lat", "latitude", "y"]), find_coord(da, ["lon", "longitude", "x"])
+    la, lo = find_coord(da, ["lat", "latitude", "y"]), find_coord(
+        da, ["lon", "longitude", "x"])
     if la is None or lo is None:
         raise ValueError("Koordinat latitude/longitude tidak ditemukan.")
-    lat, lon = np.asarray(da[la].values, float), np.asarray(da[lo].values, float)
+    lat, lon = np.asarray(da[la].values, float), np.asarray(
+        da[lo].values, float)
     if lat.ndim != 1 or lon.ndim != 1:
         raise ValueError("Dashboard membutuhkan koordinat lat/lon 1-dimensi.")
     return lat, lon, la, lo
@@ -185,8 +189,10 @@ def get_lat_lon(da):
 def select_lead(da, lead_year):
     ld = find_dim(da, ["lead_year", "lead", "year"])
     if ld is None:
-        raise ValueError(f"Dimensi lead year tidak ditemukan. Dimensi: {da.dims}")
-    coord = np.asarray(da[ld].values) if ld in da.coords else np.arange(1, da.sizes[ld] + 1)
+        raise ValueError(
+            f"Dimensi lead year tidak ditemukan. Dimensi: {da.dims}")
+    coord = np.asarray(da[ld].values) if ld in da.coords else np.arange(
+        1, da.sizes[ld] + 1)
     m = np.where(coord.astype(str) == str(lead_year))[0]
     if len(m):
         return da.isel({ld: int(m[0])})
@@ -196,12 +202,14 @@ def select_lead(da, lead_year):
 
 
 def select_member(da, member_value):
-    md = find_dim(da, ["sample", "member", "ensemble", "realization", "variant"])
+    md = find_dim(da, ["sample", "member", "ensemble",
+                  "realization", "variant"])
     if md is None:
         return da
     if member_value == "mean":
         return da.mean(dim=md, skipna=True)
-    coords = np.asarray(da[md].values) if md in da.coords else np.arange(da.sizes[md])
+    coords = np.asarray(
+        da[md].values) if md in da.coords else np.arange(da.sizes[md])
     for i, v in enumerate(coords):
         if str(v) == str(member_value):
             return da.isel({md: i})
@@ -209,7 +217,8 @@ def select_member(da, member_value):
         i = int(str(member_value)[1]) - 1
         if 0 <= i < da.sizes[md]:
             return da.isel({md: i})
-    raise ValueError(f"Ensemble {member_value} tidak ditemukan. Tersedia: {coords}")
+    raise ValueError(
+        f"Ensemble {member_value} tidak ditemukan. Tersedia: {coords}")
 
 
 def convert_units(values, da, variable):
@@ -234,7 +243,8 @@ def as_lat_lon_array(da, la, lo):
     if rem:
         raise ValueError(f"Dimensi belum dipilih sepenuhnya: {rem}")
     arr = np.asarray(da.transpose(la, lo).values, float)
-    lat, lon = np.asarray(da[la].values, float), np.asarray(da[lo].values, float)
+    lat, lon = np.asarray(da[la].values, float), np.asarray(
+        da[lo].values, float)
     if lat[0] > lat[-1]:
         arr = arr[::-1, :]
     if lon[0] > lon[-1]:
@@ -248,13 +258,18 @@ def load_geometries(boundary_path):
     if not path.exists():
         raise FileNotFoundError(f"File batas wilayah tidak ditemukan: {path}")
     gdf = gpd.read_file(path)
-    col = next((c for c in ["ADMIN", "admin", "name", "NAME", "name_en", "NAME_EN", "COUNTRY", "country", "SOVEREIGNT"] if c in gdf.columns), None)
+    col = next((c for c in ["ADMIN", "admin", "name", "NAME", "name_en",
+               "NAME_EN", "COUNTRY", "country", "SOVEREIGNT"] if c in gdf.columns), None)
     if col is None:
-        raise ValueError(f"Kolom nama negara tidak ditemukan di GeoJSON. Kolom: {list(gdf.columns)}")
-    is_indo = gdf[col].astype(str).str.contains("Indonesia", case=False, na=False)
+        raise ValueError(
+            f"Kolom nama negara tidak ditemukan di GeoJSON. Kolom: {list(gdf.columns)}")
+    is_indo = gdf[col].astype(str).str.contains(
+        "Indonesia", case=False, na=False)
     if gdf[is_indo].empty:
         raise ValueError("Poligon Indonesia tidak ditemukan di GeoJSON.")
-    union = lambda g: g.union_all() if hasattr(g, "union_all") else g.unary_union
+
+    def union(g): return g.union_all() if hasattr(
+        g, "union_all") else g.unary_union
     nb = gdf[~is_indo].cx[92.0:144.0, -13.0:9.0]
     return union(gdf[is_indo].geometry), (union(nb.geometry) if not nb.empty else None)
 
@@ -279,20 +294,22 @@ def make_fine_land_mask(lon_min, lon_max, lat_min, lat_max, step, boundary_path)
 def load_forecast(variable):
     cfg = FILES[variable]
     rda = get_variable(open_dataset(str(cfg["raw"])), cfg["raw_variable"])
-    cda = get_variable(open_dataset(str(cfg["corrected"])), cfg["corrected_variable"])
+    cda = get_variable(open_dataset(
+        str(cfg["corrected"])), cfg["corrected_variable"])
     rlat, rlon, rla, rlo = get_lat_lon(rda)
     clat, clon, cla, clo = get_lat_lon(cda)
     if not (np.allclose(np.sort(rlat), np.sort(clat)) and np.allclose(np.sort(rlon), np.sort(clon))):
-        raise ValueError("Koordinat latitude/longitude antara raw dan corrected tidak cocok.")
+        raise ValueError(
+            "Koordinat latitude/longitude antara raw dan corrected tidak cocok.")
     if find_dim(rda, ["lead_year", "lead", "year"]) is None or find_dim(cda, ["lead_year", "lead", "year"]) is None:
-        raise ValueError("Dimensi lead_year tidak ditemukan pada salah satu file.")
+        raise ValueError(
+            "Dimensi lead_year tidak ditemukan pada salah satu file.")
     mem = ["sample", "member", "ensemble", "realization", "variant"]
     rm, cm = find_dim(rda, mem), find_dim(cda, mem)
     if rm and cm and rda.sizes[rm] != cda.sizes[cm]:
         raise ValueError("Jumlah ensemble raw dan corrected tidak sama.")
     return dict(raw=rda, corrected=cda, lat=np.sort(rlat), lon=np.sort(rlon),
                 raw_lat_name=rla, raw_lon_name=rlo, corr_lat_name=cla, corr_lon_name=clo)
-
 
 
 def get_selected_arrays(ds, variable, lead_year, member_value):
@@ -346,8 +363,10 @@ def compute_lead_year_profile(variable, member_value):
     rows = []
     for ly in range(1, 11):
         s = get_selected_arrays(ds, variable, ly, member_value)
-        m = lambda a: float(np.nanmean(a[np.isfinite(a)])) if np.isfinite(a).any() else np.nan
-        rows.append(dict(ly=ly, raw=m(s["raw"]), cor=m(s["corrected"]), dif=m(s["difference"])))
+        def m(a): return float(np.nanmean(
+            a[np.isfinite(a)])) if np.isfinite(a).any() else np.nan
+        rows.append(dict(ly=ly, raw=m(s["raw"]), cor=m(
+            s["corrected"]), dif=m(s["difference"])))
     return pd.DataFrame(rows)
 
 
@@ -364,25 +383,31 @@ def build_csv(variable, lead_year, member_value):
 
 def interpolate_bilinear_numpy(lon, lat, z, flon, flat, fmask):
     """Interpolasi visual bilinear (NumPy murni); hanya untuk tampilan peta."""
-    ix1 = np.clip(np.searchsorted(lon, flon, side="right"), 1, len(lon) - 1); ix0 = ix1 - 1
-    iy1 = np.clip(np.searchsorted(lat, flat, side="right"), 1, len(lat) - 1); iy0 = iy1 - 1
+    ix1 = np.clip(np.searchsorted(lon, flon, side="right"), 1, len(lon) - 1)
+    ix0 = ix1 - 1
+    iy1 = np.clip(np.searchsorted(lat, flat, side="right"), 1, len(lat) - 1)
+    iy0 = iy1 - 1
     dx = np.where(lon[ix1] != lon[ix0], lon[ix1] - lon[ix0], 1.0)
     dy = np.where(lat[iy1] != lat[iy0], lat[iy1] - lat[iy0], 1.0)
     wx = np.clip((flon - lon[ix0]) / dx, 0, 1)[None, :]
     wy = np.clip((flat - lat[iy0]) / dy, 0, 1)[:, None]
     corners = [(z[np.ix_(iy0, ix0)], (1 - wy) * (1 - wx)), (z[np.ix_(iy0, ix1)], (1 - wy) * wx),
                (z[np.ix_(iy1, ix0)], wy * (1 - wx)), (z[np.ix_(iy1, ix1)], wy * wx)]
-    num = np.zeros((len(flat), len(flon))); den = np.zeros_like(num)
+    num = np.zeros((len(flat), len(flon)))
+    den = np.zeros_like(num)
     for v, w in corners:
         ok = np.isfinite(v)
-        num += np.where(ok, v * w, 0.0); den += np.where(ok, w, 0.0)
+        num += np.where(ok, v * w, 0.0)
+        den += np.where(ok, w, 0.0)
     out = np.where(den > 1e-12, num / np.where(den > 1e-12, den, 1.0), np.nan)
     miss = fmask & ~np.isfinite(out)
     if np.any(miss):
-        gx, gy = np.meshgrid(lon, lat); ok = np.isfinite(z)
+        gx, gy = np.meshgrid(lon, lat)
+        ok = np.isfinite(z)
         if np.any(ok):
             fx, fy = np.meshgrid(flon, flat)
-            d2 = (fx[miss][:, None] - gx[ok][None, :]) ** 2 + (fy[miss][:, None] - gy[ok][None, :]) ** 2
+            d2 = (fx[miss][:, None] - gx[ok][None, :]) ** 2 + \
+                (fy[miss][:, None] - gy[ok][None, :]) ** 2
             out[miss] = z[ok][np.argmin(d2, axis=1)]
     return np.where(fmask, out, np.nan)
 
@@ -395,7 +420,8 @@ def geometry_to_xy_lines(geom):
         if poly.is_empty or not hasattr(poly, "exterior"):
             continue
         bx, by = poly.exterior.xy
-        xs += list(bx) + [None]; ys += list(by) + [None]
+        xs += list(bx) + [None]
+        ys += list(by) + [None]
     return xs, ys
 
 
@@ -414,9 +440,11 @@ def reset_all():
 # ------------------------------------------------------------------ filter
 filt = st.container(key="filt")
 c1, c2, c3, c4, c5, c6, c7 = filt.columns([1.3, .8, 1.4, 1.0, .5, .62, .68])
-variable = c1.selectbox("Variabel Iklim", ["TAS", "PR"], key="var", format_func=lambda x: FILES[x]["label"])
+variable = c1.selectbox("Variabel Iklim", [
+                        "TAS", "PR"], key="var", format_func=lambda x: FILES[x]["label"])
 lead_year = c2.selectbox("Lead Year", list(range(1, 11)), key="lead")
-member_label = c3.selectbox("Ensemble Member", list(MEMBER_OPTIONS.keys()), key="member")
+member_label = c3.selectbox("Ensemble Member", list(
+    MEMBER_OPTIONS.keys()), key="member")
 export_ph = c4.empty()
 c5.button("Reset", on_click=reset_all, use_container_width=True)
 with c6.popover("ⓘ Catatan", use_container_width=True):
@@ -467,6 +495,7 @@ if raw_v.size == 0:
 
 pair_n = int(SEL["pair_mask"].sum())
 
+
 def layout(fig, h, **kw):
     base = dict(height=h, separators=",.", font=dict(size=11, color=INK2, family="Poppins, Segoe UI, sans-serif"),
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=42, r=12, t=30, b=26),
@@ -485,18 +514,25 @@ def unit(fig, txt):
 def axes(fig, x=None, y=None):
     bx = dict(gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(size=11), showspikes=True, spikemode="across",
               spikethickness=1, spikecolor="#9aa8b8", spikedash="dot")
-    by = dict(gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(size=11))
-    bx.update(x or {}); by.update(y or {})
-    fig.update_xaxes(**bx); fig.update_yaxes(**by)
+    by = dict(gridcolor=GRID, zeroline=False,
+              linecolor=GRID, tickfont=dict(size=11))
+    bx.update(x or {})
+    by.update(y or {})
+    fig.update_xaxes(**bx)
+    fig.update_yaxes(**by)
 
-
-def plot(fig, key=None, **kw):
-    c = dict(displaylogo=False, displayModeBar=False)
+def plot(fig, key=None, interactive=False, **kw):
+    # Kontrol interaktif hanya untuk peta; grafik lain tetap ringkas.
+    c = dict(displaylogo=False, displayModeBar=interactive, scrollZoom=interactive)
+    if interactive:
+        # Zoom in, zoom out, dan reset sudah bawaan Plotly 2D. Cukup buang tombol
+        # yang tidak dipakai, jangan ditambah lagi lewat modeBarButtonsToAdd (jadi dobel).
+        c["modeBarButtonsToRemove"] = ["select2d", "lasso2d", "autoScale2d", "zoom2d"]
+        c["toImageButtonOptions"] = dict(format="png", filename="peta_bmkg_dcpp", scale=2)
     try:
         return st.plotly_chart(fig, width="stretch", config=c, key=key, **kw)
     except TypeError:
         return st.plotly_chart(fig, use_container_width=True, config=c, key=key, **kw)
-
 
 def active_marker(fig):
     fig.add_vline(x=lead_year, line=dict(color=NAVY, width=1.2, dash="dot"))
@@ -531,7 +567,8 @@ def fig_dist():
     fig.add_histogram(x=cv, name="Corrected", nbinsx=35, histnorm="probability", bingroup="d", opacity=.65, marker=dict(color=TEAL),
                       hovertemplate="Corrected: %{x:.2f}<br>Proporsi: %{y:.3f}<extra></extra>")
     layout(fig, H_FI, barmode="overlay", margin=dict(l=42, r=8, t=26, b=24))
-    axes(fig, x=dict(showspikes=False, title=dict(text=U, font=dict(size=10), standoff=2)), y=dict(rangemode="tozero"))
+    axes(fig, x=dict(showspikes=False, title=dict(
+        text=U, font=dict(size=10), standoff=2)), y=dict(rangemode="tozero"))
     unit(fig, "Proporsi")
     return fig, int(rv.size)
 
@@ -541,7 +578,8 @@ def fig_diff_bars():
                            opacity=[1 if l == lead_year else .55 for l in PROF["ly"]]),
                            hovertemplate=f"LY %{{x}}<br>Corrected − Raw: %{{y:+.2f}} {U}<extra></extra>"))
     active_marker(fig)
-    layout(fig, H_AN, showlegend=False, bargap=.25, margin=dict(l=42, r=12, t=22, b=26))
+    layout(fig, H_AN, showlegend=False, bargap=.25,
+           margin=dict(l=42, r=12, t=22, b=26))
     axes(fig, x=dict(dtick=1, range=[.4, 10.6], showspikes=False, title=dict(text="Lead Year", font=dict(size=10), standoff=2)),
          y=dict(zeroline=True, zerolinecolor="#44566c", zerolinewidth=1.4))
     unit(fig, U)
@@ -558,8 +596,10 @@ def map_arrays(metric):
 
 def fig_map(metric):
     zsrc, zland, title = map_arrays(metric)
-    flon, flat, fmask = make_fine_land_mask(94.0, 142.0, -11.5, 6.8, 0.08, str(BOUNDARY_FILE))
-    fz = interpolate_bilinear_numpy(DS["lon"], DS["lat"], zsrc, flon, flat, fmask)
+    flon, flat, fmask = make_fine_land_mask(
+        94.0, 142.0, -11.5, 6.8, 0.08, str(BOUNDARY_FILE))
+    fz = interpolate_bilinear_numpy(
+        DS["lon"], DS["lat"], zsrc, flon, flat, fmask)
     vals = fz[np.isfinite(fz)]
     if vals.size == 0:
         return None
@@ -567,8 +607,10 @@ def fig_map(metric):
         m = max(float(np.nanpercentile(np.abs(vals), 98)), .25)
         zmin, zmax, scale = -m, m, [[0, BLUE], [.5, "#f4f4f4"], [1, ORANGE]]
     else:
-        both = np.concatenate([SEL["raw_visual"][np.isfinite(SEL["raw_visual"])], SEL["corrected_visual"][np.isfinite(SEL["corrected_visual"])]])
-        zmin, zmax = float(np.nanpercentile(both, 2)), float(np.nanpercentile(both, 98))
+        both = np.concatenate([SEL["raw_visual"][np.isfinite(
+            SEL["raw_visual"])], SEL["corrected_visual"][np.isfinite(SEL["corrected_visual"])]])
+        zmin, zmax = float(np.nanpercentile(both, 2)), float(
+            np.nanpercentile(both, 98))
         if variable == "PR":
             zmin = min(0.0, zmin)
         if np.isclose(zmin, zmax):
@@ -586,12 +628,16 @@ def fig_map(metric):
                                            title=dict(text=U if metric != "diff" else f"Δ {U}", side="right", font=dict(size=10.5, color=INK2))),
                              hovertemplate=f"Lintang: %{{y:.2f}}°<br>Bujur: %{{x:.2f}}°<br>{title}: %{{z:.2f}} {U}<extra></extra>"))
     ix, iy = geometry_to_xy_lines(ig)
-    fig.add_scatter(x=ix, y=iy, mode="lines", line=dict(color="#263B50", width=.8), hoverinfo="skip", showlegend=False)
-    layout(fig, H_MAP, margin=dict(l=2, r=64, t=2, b=2), showlegend=False, hovermode="closest", dragmode="pan",
-           xaxis=dict(range=[94.2, 141.8], showgrid=False, zeroline=False, tickfont=dict(size=9), ticksuffix="°"),
-           yaxis=dict(range=[-11.4, 6.6], showgrid=False, zeroline=False, tickfont=dict(size=9), ticksuffix="°", scaleanchor="x", scaleratio=1))
+    fig.add_scatter(x=ix, y=iy, mode="lines", line=dict(
+        color="#263B50", width=.8), hoverinfo="skip", showlegend=False)
+    layout(fig, H_MAP, margin=dict(l=2, r=64, t=2, b=2), showlegend=False,
+       hovermode="closest", dragmode="pan", uirevision="peta",
+       modebar=dict(orientation="v", bgcolor="rgba(255,255,255,.8)",
+                    color=INK2, activecolor=NAVY),
+       xaxis=dict(range=[94.2, 141.8], showgrid=False, zeroline=False, tickfont=dict(size=9), ticksuffix="°"),
+       yaxis=dict(range=[-11.4, 6.6], showgrid=False, zeroline=False, tickfont=dict(size=9), ticksuffix="°",
+                  scaleanchor="x", scaleratio=1))
     return fig
-
 
 
 def eval_table():
@@ -750,13 +796,19 @@ def eval_table():
 
 
 # ------------------------------------------------------------------ KPI
-sg = lambda v: "pos" if v >= 0 else "neg"
-chip = lambda v: f'<span class="chip {sg(v)}">{"Positif" if v >= 0 else "Negatif"}</span>'
-I = lambda k: f' <span class="tp" title="{GLOSS[k]}">ⓘ</span>'
+def sg(v): return "pos" if v >= 0 else "neg"
+def chip(
+    v): return f'<span class="chip {sg(v)}">{"Positif" if v >= 0 else "Negatif"}</span>'
+
+
+def I(k): return f' <span class="tp" title="{GLOSS[k]}">ⓘ</span>'
+
+
 dmean = float(np.nanmean(dif_v)) if dif_v.size else np.nan
 hist = HISTORICAL_METRICS[variable]
 ckey = cfg["model"]
-rmse_drop = (hist["Raw"]["RMSE"] - hist[ckey]["RMSE"]) / hist["Raw"]["RMSE"] * 100
+rmse_drop = (hist["Raw"]["RMSE"] - hist[ckey]["RMSE"]) / \
+    hist["Raw"]["RMSE"] * 100
 pmax = PROF.loc[PROF["dif"].abs().idxmax()]
 
 cards = [
@@ -770,7 +822,8 @@ cards = [
      f'Lead Year {int(pmax["ly"])} · rata-rata spasial'),
     ("", "RMSE historis turun" + I("RMSE"), f'{fmt(rmse_drop, 1)}<small>%</small>',
      f'{fmt(hist["Raw"]["RMSE"], 3)} → {fmt(hist[ckey]["RMSE"], 3)} {U} · {ckey} (DCPP-A)'),
-    ("", "Grid daratan valid", f'{pair_n:,}'.replace(",", "."), f'pasangan Raw & Corrected · {cfg["obs"]}'),
+    ("", "Grid daratan valid", f'{pair_n:,}'.replace(
+        ",", "."), f'pasangan Raw & Corrected · {cfg["obs"]}'),
 ]
 st.markdown('<div class="kpis">' + "".join(
     f'<div class="kpi {c}"><div class="l">{l}</div><div class="v">{v}</div><div class="s" title="{re.sub("<[^>]+>", "", s_)}">{s_}</div></div>'
@@ -782,7 +835,8 @@ with st.container(key="main"):
 
     # ---------------- kiri: profil, distribusi, evaluasi
     with L.container(key="secL"):
-        st.markdown('<div class="sec">Forecast dan Performa Model<span>profil lead year, distribusi, evaluasi</span></div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="sec">Forecast dan Performa Model<span>profil lead year, distribusi, evaluasi</span></div>', unsafe_allow_html=True)
         with st.container(key="tsCard"):
             st.markdown(f'<div class="ct">{tip("Profil forecast", "Lead Year")} {cfg["short_label"].lower()}, Raw vs Corrected'
                         f'<span>rata-rata spasial daratan Indonesia · {member_label} · Lead Year 1–10</span></div>', unsafe_allow_html=True)
@@ -794,10 +848,12 @@ with st.container(key="main"):
             a, b = st.columns(2)
             with a.container(key="fiCard"):
                 fg, n_ok = fig_dist()
-                st.markdown(f'<div class="ct">Distribusi nilai grid<span>Raw vs Corrected · LY {lead_year} · {n_ok:,} grid</span></div>'.replace(",", "."), unsafe_allow_html=True)
+                st.markdown(f'<div class="ct">Distribusi nilai grid<span>Raw vs Corrected · LY {lead_year} · {n_ok:,} grid</span></div>'.replace(
+                    ",", "."), unsafe_allow_html=True)
                 plot(fg, key="c_dist")
             with b.container(key="evCard"):
-                st.markdown(f'<div class="ct">Evaluasi historis kandidat model {tip("ⓘ", "DCPP")}<span>{variable} · DCPP-A vs {cfg["obs"]}</span></div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="ct">Evaluasi historis kandidat model {tip("ⓘ", "DCPP")}<span>{variable} · DCPP-A vs {cfg["obs"]}</span></div>', unsafe_allow_html=True)
                 st.markdown(eval_table(), unsafe_allow_html=True)
 st.markdown(
     '<div class="note">'
@@ -808,33 +864,43 @@ st.markdown(
     '</div>',
     unsafe_allow_html=True,
 )
-    # ---------------- kanan: peta dan selisih
+# ---------------- kanan: peta dan selisih
 with R.container(key="secR"):
-        st.markdown('<div class="sec">Sebaran Spasial<span>peta dan perubahan akibat koreksi</span></div>', unsafe_allow_html=True)
-        with st.container(key="mapCard"):
-            with st.container(key="mapHead"):
-                t1, t2 = st.columns([1, 1.25], vertical_alignment="center")
-                t1.markdown(f'<div class="ct" style="padding-top:8px">Peta {cfg["short_label"].lower()} · LY {lead_year}</div>', unsafe_allow_html=True)
-                metric = t2.selectbox("Metrik peta", ["corr", "raw", "diff"], key="map_metric", label_visibility="collapsed",
-                                      format_func=lambda m: {"corr": "Corrected", "raw": "Raw", "diff": "Difference (Corrected − Raw)"}[m])
-            fm = fig_map(metric)
-            if fm is None:
-                st.warning("Gagal memetakan nilai pada poligon daratan Indonesia.")
-            else:
-                plot(fm, key="c_map")
-            _, land, ttl = map_arrays(metric)
-            lv = land[np.isfinite(land)]
-            sm = [("Rerata daratan", f"{fmt(np.nanmean(lv), 2, metric == 'diff')} {U}", ttl),
-                  ("Maksimum", f"{fmt(np.nanmax(lv), 2, metric == 'diff')} {U}", "sel daratan"),
-                  ("Minimum", f"{fmt(np.nanmin(lv), 2, metric == 'diff')} {U}", "sel daratan"),
-                  ("Sebaran (SD)", f"{fmt(np.nanstd(lv), 2)} {U}", "spasial")]
-            st.markdown('<div class="sumw">' + "".join(
-                f'<div class="sum"><div class="l">{l}</div><div class="v" title="{v} · {t}">{v}</div><div class="s">{t}</div></div>' for l, v, t in sm) + "</div>",
+    st.markdown('<div class="sec">Sebaran Spasial<span>peta dan perubahan akibat koreksi</span></div>',
                 unsafe_allow_html=True)
-        with st.container(key="anCard"):
-            st.markdown(f'<div class="ct">Selisih Corrected − Raw per Lead Year {tip("ⓘ", "Difference")}<span>rata-rata spasial · {cfg["model"]}</span></div>', unsafe_allow_html=True)
-            plot(fig_diff_bars(), key="c_diff")
+    with st.container(key="mapCard"):
+        with st.container(key="mapHead"):
+            t1, t2 = st.columns([1, 1.25], vertical_alignment="center")
+            t1.markdown(
+                f'<div class="ct" style="padding-top:8px">Peta {cfg["short_label"].lower()} · LY {lead_year}</div>',
+                unsafe_allow_html=True)
+            metric = t2.selectbox(
+                "Metrik peta", ["corr", "raw", "diff"], key="map_metric",
+                label_visibility="collapsed",
+                format_func=lambda m: {"corr": "Corrected", "raw": "Raw",
+                                       "diff": "Difference (Corrected − Raw)"}[m])
 
+        fm = fig_map(metric)
+        if fm is None:
+            st.warning("Gagal memetakan nilai pada poligon daratan Indonesia.")
+        else:
+            plot(fm, key="c_map", interactive=True)   
+
+        _, land, ttl = map_arrays(metric)
+        lv = land[np.isfinite(land)]
+        sm = [("Rerata daratan", f"{fmt(np.nanmean(lv), 2, metric == 'diff')} {U}", ttl),
+              ("Maksimum", f"{fmt(np.nanmax(lv), 2, metric == 'diff')} {U}", "sel daratan"),
+              ("Minimum", f"{fmt(np.nanmin(lv), 2, metric == 'diff')} {U}", "sel daratan"),
+              ("Sebaran (SD)", f"{fmt(np.nanstd(lv), 2)} {U}", "spasial")]
+        st.markdown('<div class="sumw">' + "".join(
+            f'<div class="sum"><div class="l">{l}</div><div class="v" title="{v} · {t}">{v}</div><div class="s">{t}</div></div>'
+            for l, v, t in sm) + "</div>", unsafe_allow_html=True)
+
+    with st.container(key="anCard"):
+        st.markdown(
+            f'<div class="ct">Selisih Corrected − Raw per Lead Year {tip("ⓘ", "Difference")}'
+            f'<span>rata-rata spasial · {cfg["model"]}</span></div>', unsafe_allow_html=True)
+        plot(fig_diff_bars(), key="c_diff")
 # ------------------------------------------------------------------ footer
 _full = ("Forecast DCPP-B s2020 (CMIP6-DCPP, CMCC-CM2-SR5). Difference = Corrected − Raw, bukan error terhadap observasi. "
          "Evaluasi berasal dari uji historis DCPP-A. Interpolasi peta hanya untuk visual. Detail metode ada di tombol Catatan.").replace(chr(34), chr(39))
