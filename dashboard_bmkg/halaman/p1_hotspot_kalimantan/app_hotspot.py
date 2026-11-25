@@ -8,6 +8,7 @@ Bila data ERA5 perlu dibuat ulang dari data mentah: python halaman/p1_hotspot_ka
 import html
 import json
 import os
+import re
 
 import numpy as np
 import pandas as pd
@@ -44,18 +45,27 @@ PROV_SHORT = {"Kalimantan Barat": "Kalbar", "Kalimantan Tengah": "Kalteng", "Kal
 ERA5_VARS = {
     "rain_mm": ("Curah hujan", "#1f6fb5", "Hujan", "mm/hari"),
     "t2m_c": ("Suhu udara 2 m", "#e8710a", "Suhu", "°C"),
-    "d2m_c": ("Titik embun", "#0f8b8d", "Titik embun", "°C"),
+    "d2m_c": ("Titik embun", "#0f8b8d", "Embun", "°C"),
     "wind_ms": ("Kecepatan angin 10 m", "#7b61a8", "Angin", "m/s"),
-    "swvl1": ("Kelembapan tanah", "#9a7b2f", "Lembap tanah", "m³/m³"),
+    "swvl1": ("Kelembapan tanah", "#9a7b2f", "Tanah", "m³/m³"),
 }
 C_UP, C_DOWN, C_FLAT = "#d62728", "#2e9e4f", "#7f7f7f"      # naik = merah, turun = hijau
+
+# Status kecamatan dari prediksi hotspot 7 hari ke depan (pred_hotspot_7d), empat tingkat.
+# Ambang bawah Waspada = kolom ambang_siaga di forecast_7hari_kecamatan.csv (±1,9 hotspot/7 hari, ikut data bila diperbarui).
+# Siaga dan Awas memakai batas tetap di bawah; makna tiap tingkat dihitung ulang dari data evaluasi (lihat kalibrasi_status()).
+AMBANG_SIAGA, AMBANG_AWAS = 5.0, 20.0                        # hotspot per 7 hari
+STATUS = ["Normal", "Waspada", "Siaga", "Awas"]
+S_COL = {"Normal": ("#e8ecf1", "#5b6b7f"), "Waspada": ("#fbefc4", "#7a5a00"),
+         "Siaga": ("#fde0c2", "#a04a00"), "Awas": ("#fbd3d3", "#a51616")}      # (latar, teks)
 
 GLOSS = {
     "AUC": "ROC-AUC: kemampuan membedakan kecamatan-hari yang ada hotspot vs tidak. 1 = sempurna, 0,5 = acak.",
     "PR-AUC": "Presisi-recall pada kejadian hotspot yang jarang (±1% sel kecamatan-hari). Lebih jujur daripada AUC untuk data tidak seimbang.",
     "RMSE": "Galat kuadrat rata-rata (hotspot per 7 hari). Menghukum meleset besar di puncak. Makin kecil makin baik.",
     "MAE": "Galat absolut rata-rata (hotspot per 7 hari). Pada data 99% nol, prediktor nol pun bisa kecil MAE-nya; baca bersama metrik lain.",
-    "Siaga": "Kecamatan dengan prediksi hotspot 7 hari ke depan di atas ambang Siaga (dari distribusi kejadian historis).",
+    "Siaga": "Status dari prediksi hotspot 7 hari ke depan: Waspada ≥ ambang dasar, Siaga ≥ 5, Awas ≥ 20 hotspot/7 hari. "
+             "Angka besar = kecamatan berstatus Siaga atau Awas.",
 }
 
 
@@ -85,50 +95,75 @@ def tip(txt, key):
 # ----------------------------------------------------------------------------------
 _CSS = """
 <style>
-/* bilah filter: 5 kolom berlabel, tombol mulai kolom ke-6 */
-.st-key-filt [data-testid="stColumn"]:nth-child(5) {padding-top:0 !important;}
-.st-key-filt [data-testid="stColumn"]:nth-child(n+6) {padding-top:16px !important;}
-/* KPI: 4 metrik model, total hotspot (lebih lebar), Siaga */
-@media (min-width:1201px) {.kpis {grid-template-columns:repeat(4,1fr) 1.35fr 1fr;}}
-.chip.up {background:#fde3e3; color:#b01e1e; margin:0 4px 0 0;} .chip.down {background:#dff3e5; color:#1d7a3a; margin:0 4px 0 0;} .chip.flat {background:#e8ecf1; color:#5b6b7f; margin:0 4px 0 0;}
-/* kartu: tinggi tetap, halaman bergulir (3 baris x 2 kartu) */
-[class*="st-key-card_"], [class*="st-key-head_"] {flex:0 0 auto !important;}
-[class*="st-key-card_"] > *, [class*="st-key-head_"] > * {flex-shrink:0 !important;}
-[class*="st-key-card_"] {background:#fff; border:1px solid #dde4ec; border-radius:10px; box-shadow:0 1px 2px rgba(11,42,74,.06); overflow:hidden; gap:0 !important; padding:0 !important; box-sizing:border-box;}
-[class*="st-key-card_"] [data-testid="stVerticalBlockBorderWrapper"] {border:0 !important;}
-.st-key-card_ts, .st-key-card_map {height:515px;}
-.st-key-card_avp, .st-key-card_era {height:352px;}
-.st-key-card_fi, .st-key-card_siaga {height:398px;}
-[class*="st-key-card_"] [class*="st-key-head_"] {padding:0 !important;}
-[class*="st-key-head_"] [data-testid="stHorizontalBlock"] {align-items:center; padding-right:8px;}
-[class*="st-key-head_"] [data-testid="stHorizontalBlock"] > div:last-child {display:flex; justify-content:flex-end;}
-[class*="st-key-head_"] [data-testid="stHorizontalBlock"] > div:last-child > div {width:auto !important;}
-.st-key-card_era [class*="st-key-head_"] [data-testid="stButtonGroup"] {padding:0 10px;}
-.st-key-head_sec [data-testid="stButtonGroup"] {justify-content:flex-end;}
+/* Satu layar: tinggi area kartu = var(--M) dari tema.py (layar - header - filter - KPI - footer - jarak).
+   Dua baris kartu: baris 1 = 58% (--R1), baris 2 = sisanya (--R2). Semua selector dibatasi ke .st-key-p1 (wadah halaman 1). */
+.st-key-p1 {--M:max(380px, calc(100vh - var(--hdr) - var(--flt) - var(--kpi) - var(--ftr) - 5*var(--gap) - 8px));
+  --R1:calc((var(--M) - var(--gap)) * .58); --R2:calc(var(--M) - var(--gap) - var(--R1)); --HD:30px; --IN:20px; --NT:30px;}
+/* bilah filter: 6 kolom berlabel, tombol mulai kolom ke-7 */
+.st-key-p1 .st-key-filt [data-testid="stColumn"]:nth-child(-n+6) {padding-top:0 !important;}
+.st-key-p1 .st-key-filt [data-testid="stColumn"]:nth-child(n+7) {padding-top:16px !important;}
+/* KPI: 4 metrik model, total hotspot (lebih lebar), status */
+@media (min-width:1201px) {.st-key-p1 .kpis {grid-template-columns:repeat(4,1fr) 1.3fr 1.25fr;}}
+.st-key-p1 .chip.up {background:#fde3e3; color:#b01e1e; margin:0 4px 0 0;} .st-key-p1 .chip.down {background:#dff3e5; color:#1d7a3a; margin:0 4px 0 0;} .st-key-p1 .chip.flat {background:#e8ecf1; color:#5b6b7f; margin:0 4px 0 0;}
+/* kartu */
+.st-key-p1 [class*="st-key-card_"], .st-key-p1 [class*="st-key-head_"] {flex:0 0 auto !important;}
+.st-key-p1 [class*="st-key-card_"] > *, .st-key-p1 [class*="st-key-head_"] > * {flex-shrink:0 !important;}
+.st-key-p1 [class*="st-key-card_"] {background:#fff; border:1px solid #dde4ec; border-radius:10px; box-shadow:0 1px 2px rgba(11,42,74,.06); overflow:hidden; gap:0 !important; padding:0 !important; box-sizing:border-box;}
+.st-key-p1 [class*="st-key-card_"] [data-testid="stVerticalBlockBorderWrapper"] {border:0 !important;}
+.st-key-p1 .st-key-card_ts, .st-key-p1 .st-key-card_map, .st-key-p1 .st-key-card_siaga {height:var(--R1);}
+.st-key-p1 .st-key-card_avp, .st-key-p1 .st-key-card_era, .st-key-p1 .st-key-card_fi {height:var(--R2);}
+.st-key-p1 [class*="st-key-head_"] {height:var(--HD); padding:0 !important; overflow:hidden;}
+.st-key-p1 [class*="st-key-head_"] [data-testid="stHorizontalBlock"] {align-items:center; padding-right:8px; flex-wrap:nowrap;}
+.st-key-p1 [class*="st-key-head_"] [data-testid="stHorizontalBlock"] > div:last-child {display:flex; justify-content:flex-end;}
+.st-key-p1 [class*="st-key-head_"] [data-testid="stHorizontalBlock"] > div:last-child > div {width:auto !important;}
+.st-key-p1 .st-key-card_era [class*="st-key-head_"] [data-testid="stButtonGroup"] {padding:0 10px;}
+.st-key-p1 [class*="st-key-head_"] .ct {padding-top:7px; height:var(--HD);}
 /* kontrol segmen: navy, aktif biru (sama dengan halaman 2) */
-[class*="st-key-head_"] [data-testid="stButtonGroup"] button, [class*="st-key-head_"] [data-baseweb="button-group"] button {min-height:24px !important; height:26px !important; padding:0 10px !important; background:§NAVY !important; border:1px solid §NAVY !important;}
-[class*="st-key-head_"] button p, [class*="st-key-head_"] button div, [class*="st-key-head_"] button span {color:#fff !important; -webkit-text-fill-color:#fff !important; font-size:11px !important;}
-[class*="st-key-head_"] button[aria-checked="true"], [class*="st-key-head_"] button[aria-pressed="true"], [class*="st-key-head_"] button[data-testid="stBaseButton-segmented_controlActive"] {background:§BLUE !important; border-color:§BLUE !important;}
-/* teks kartu boleh membungkus (kolom kanan lebih sempit) */
-[class*="st-key-card_"] .ins {height:auto; min-height:20px; line-height:1.4; white-space:normal; overflow:visible; padding:2px 12px 0;}
-[class*="st-key-card_"] .note {height:auto; padding:0 12px 8px;}
-.sumw {height:auto; padding:4px 12px 10px;}
-[data-testid="stPlotlyChart"] {padding:0 4px;}
-.fleg {display:flex; flex-wrap:wrap; gap:4px 12px; padding:2px 12px 4px; font-size:11px; color:§INK2;}
-.fleg i {display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:middle;}
-/* tabel Siaga */
-.tbw {height:326px; overflow-y:auto; padding:0 8px 8px;}
-.tbw table.ev {font-size:11px;}
-.tbw table.ev th {position:sticky; top:0; background:#fff; font-size:10.5px; padding:3px 8px;}
-.tbw table.ev th:nth-child(-n+2), .tbw table.ev td:nth-child(-n+2) {text-align:left;}
-.tbw table.ev td {padding:4px 6px;}
-.tbw table.ev th, .tbw table.ev td {border-left:0 !important; border-right:0 !important;}
-.tbw table.ev th {border-top:0 !important;}
-.tbw table.ev tr:hover td {background:#f4f8fc;}
-.tbw .bar {background:§TEAL; opacity:.7; margin-right:6px;}
+.st-key-p1 [class*="st-key-head_"] [data-testid="stButtonGroup"] button, .st-key-p1 [class*="st-key-head_"] [data-baseweb="button-group"] button {min-height:22px !important; height:24px !important; padding:0 8px !important; background:§NAVY !important; border:1px solid §NAVY !important;}
+.st-key-p1 [class*="st-key-head_"] button p, .st-key-p1 [class*="st-key-head_"] button div, .st-key-p1 [class*="st-key-head_"] button span {color:#fff !important; -webkit-text-fill-color:#fff !important; font-size:11px !important;}
+.st-key-p1 [class*="st-key-head_"] button[aria-checked="true"], .st-key-p1 [class*="st-key-head_"] button[aria-pressed="true"], .st-key-p1 [class*="st-key-head_"] button[data-testid="stBaseButton-segmented_controlActive"] {background:§BLUE !important; border-color:§BLUE !important;}
+/* baris teks berukuran tetap supaya tinggi grafik bisa dihitung; teks lengkap ada di tooltip */
+.st-key-p1 [class*="st-key-card_"] .ins {height:var(--IN); line-height:var(--IN); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 12px;}
+.st-key-p1 [class*="st-key-card_"] .note {height:var(--NT); overflow:hidden; padding:2px 12px 0; box-sizing:border-box;}
+.st-key-p1 .sumw {height:58px; padding:6px 12px 0;}
+.st-key-p1 [data-testid="stPlotlyChart"] {padding:0 4px; box-sizing:border-box;}
+.st-key-p1 .fleg {display:flex; flex-wrap:nowrap; overflow:hidden; gap:4px 10px; padding:0 12px; height:20px; line-height:20px; font-size:10.5px; color:§INK2; white-space:nowrap;}
+.st-key-p1 .fleg i {display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:4px; vertical-align:middle;}
+/* tinggi isi kartu = tinggi kartu - kepala - baris info - catatan - border */
+§CHARTS
+.st-key-p1 .st-key-fi_scroll {height:calc(var(--R2) - var(--HD) - 20px - 4px) !important; max-height:none !important;}
+/* tabel status */
+.st-key-p1 .slv {display:flex; gap:6px; padding:0 10px; height:var(--IN); align-items:center; font-size:11px; color:§INK2; white-space:nowrap; overflow:hidden;}
+.st-key-p1 .st {display:inline-block; font-size:10.5px; font-weight:700; padding:0 7px; border-radius:9px; line-height:16px;}
+.st-key-p1 .tbw {height:calc(var(--R1) - var(--HD) - 2*var(--IN) - 8px); overflow-y:auto; padding:0 8px 4px; box-sizing:border-box;}
+.st-key-p1 .tbw table.ev {font-size:11px; table-layout:fixed;}
+.st-key-p1 .tbw table.ev th {position:sticky; top:0; background:#fff; font-size:10px; padding:3px 6px;}
+.st-key-p1 .tbw table.ev th:nth-child(-n+3), .st-key-p1 .tbw table.ev td:nth-child(-n+3) {text-align:left;}
+.st-key-p1 .tbw table.ev td {padding:3px 6px; overflow:hidden; text-overflow:ellipsis;}
+.st-key-p1 .tbw table.ev th, .st-key-p1 .tbw table.ev td {border-left:0 !important; border-right:0 !important;}
+.st-key-p1 .tbw table.ev th {border-top:0 !important;}
+.st-key-p1 .tbw table.ev tr:hover td {background:#f4f8fc;}
+.st-key-p1 .tbw .bar {background:§TEAL; opacity:.7; margin-right:5px;}
+/* layar sempit/pendek: kartu bertinggi tetap dan halaman boleh bergulir */
+/* layar pendek (mis. laptop 1366x768): catatan di bawah grafik disembunyikan (teks tetap di tombol Catatan/tooltip) */
+@media (max-height:760px) {.st-key-p1 {--NT:0px;} .st-key-p1 .note.cn {display:none;}}
+@media (max-width:1200px) {.st-key-p1 {--R1:400px; --R2:300px;}}
 </style>
 """
-for _k, _v in {"§INK2": INK2, "§NAVY": NAVY, "§BLUE": BLUE, "§TEAL": TEAL}.items():
+
+
+def _tinggi(key, expr):
+    """Paksa tinggi grafik Plotly ber-key `key` (pola sama dengan tema._h)."""
+    sel = ", ".join(f".st-key-p1 .st-key-{key}{x}" for x in ("", ' [data-testid="stPlotlyChart"]', " .js-plotly-plot", " .plot-container",
+                                                          " .svg-container", " .main-svg"))
+    return f".st-key-p1 .st-key-{key} {{flex:0 0 auto !important;}} {sel} {{height:{expr} !important;}}\n"
+
+
+_CHARTS = (_tinggi("c1_ts", "calc(var(--R1) - var(--HD) - var(--IN) - var(--NT) - 2px)")
+           + _tinggi("peta", "calc(var(--R1) - var(--HD) - 58px - 2px)")
+           + _tinggi("c1_avp", "calc(var(--R2) - var(--HD) - var(--IN) - var(--NT) - 2px)")
+           + _tinggi("c1_era", "calc(var(--R2) - var(--HD) - var(--IN) - var(--NT) - 2px)"))
+for _k, _v in {"§INK2": INK2, "§NAVY": NAVY, "§BLUE": BLUE, "§TEAL": TEAL, "§CHARTS": _CHARTS}.items():
     _CSS = _CSS.replace(_k, _v)
 st.markdown(_CSS, unsafe_allow_html=True)
 
@@ -168,9 +203,24 @@ def load_combined():
     return pd.concat([a, o], ignore_index=True)
 
 
+def batas_status(ambang_dasar):
+    """Batas bawah tiap tingkat (hotspot/7 hari); Siaga/Awas tidak boleh di bawah ambang dasar."""
+    w = float(ambang_dasar)
+    return [0.0, w, max(AMBANG_SIAGA, w), max(AMBANG_AWAS, w)]
+
+
+def ke_status(pred, batas):
+    """Prediksi 7 hari -> Normal/Waspada/Siaga/Awas (prediksi kosong dianggap Normal)."""
+    idx = np.searchsorted(np.asarray(batas[1:]), np.nan_to_num(np.asarray(pred, dtype=float), nan=0.0), side="right")
+    return pd.Categorical(np.asarray(STATUS)[idx], categories=STATUS, ordered=True)
+
+
 @st.cache_data(show_spinner=False)
 def load_siaga():
-    return pd.read_csv(P["siaga"])
+    """Forecast 7 hari per kecamatan. Status dihitung ulang dari pred_hotspot_7d (kolom status bawaan hanya dua tingkat)."""
+    s = pd.read_csv(P["siaga"])
+    s["status"] = ke_status(s["pred_hotspot_7d"], batas_status(s["ambang_siaga"].iloc[0]))
+    return s
 
 
 @st.cache_data(show_spinner=False)
@@ -188,6 +238,16 @@ def load_avp():
     df = pq.read_table(P["avp"], columns=["date", "district_id", "actual_7d", "pred_final"]).to_pandas()
     df["district_id"] = df["district_id"].astype("category")
     return df
+
+
+@st.cache_data(show_spinner=False)
+def kalibrasi_status(ambang_dasar):
+    """Arti tiap tingkat pada data evaluasi 2015–2026: peluang aktual 7 hari ≥ 1 / ≥ 5 / ≥ 20 hotspot, per tingkat prediksi."""
+    d = pq.read_table(P["avp"], columns=["actual_7d", "pred_final"]).to_pandas()
+    k = ke_status(d["pred_final"], batas_status(ambang_dasar))
+    a = d["actual_7d"].to_numpy()
+    g = pd.DataFrame({"k": k, "p1": a >= 1, "p5": a >= 5, "p20": a >= 20})
+    return g.groupby("k", observed=False)[["p1", "p5", "p20"]].mean().mul(100)
 
 
 @st.cache_data(show_spinner="Memuat data iklim ERA5…")
@@ -299,8 +359,20 @@ kec_opts = [ALL_KEC] + list(kec_label.values())
 if st.session_state["f_kec"] not in kec_opts:
     st.session_state["f_kec"] = ALL_KEC
 
+SPLITS = ["Holdout 2026", "Walk-forward 2015–25"]
+if st.session_state.get("f_split") not in SPLITS:
+    st.session_state["f_split"] = SPLITS[0]
+sg = load_siaga()
+BATAS = batas_status(sg["ambang_siaga"].iloc[0])
+KAL = kalibrasi_status(BATAS[1])
+
+
+def _pct(lv, col):
+    return fmt(float(KAL.loc[lv, col]), 0) + "%"
+
+
 with st.container(key="filt"):
-    f1, f2, f3, f4, f5, f6, f7, f8 = st.columns([1.2, 1.5, 1.1, 1.4, 1.2, .5, .62, .75])
+    f1, f2, f3, f4, f5, f6, f7, f8, f9 = st.columns([1.15, 1.45, 1.1, 1.3, 1.15, 1.1, .48, .7, .75])
     f1.selectbox("Preset periode", PRESETS, key="f_preset", on_change=_set_preset_rng)
     f2.date_input("Rentang waktu", key="f_rng", min_value=FIRST_OBS.date(), max_value=LAST_FC.date(),
                   format="DD/MM/YYYY", on_change=_custom)
@@ -308,18 +380,22 @@ with st.container(key="filt"):
     f4.selectbox("Kabupaten/Kota", kab_opts, key="f_kab", on_change=_reset_kec,
                  disabled=(st.session_state["f_prov"] == ALL_PROV))
     f5.selectbox("Kecamatan", kec_opts, key="f_kec", disabled=(st.session_state["f_kab"] == ALL_KAB))
-    f6.button("Reset", on_click=_reset_all, width="stretch")
-    with f7.popover("ⓘ Catatan", width="stretch"):
+    f6.selectbox("Evaluasi model", SPLITS, key="f_split")
+    f7.button("Reset", on_click=_reset_all, width="stretch")
+    with f8.popover("ⓘ Catatan", width="stretch"):
         st.markdown(
             "- **Total hotspot**: aktual sampai data terakhir; hari sesudahnya memakai prediksi outlook model.\n"
             "- **Perubahan di peta**: total paruh akhir periode dibanding paruh awal. Naik = merah, turun = hijau.\n"
-            "- **Siaga**: prediksi 7 hari ke depan ≥ ambang dari distribusi historis.\n"
+            f"- **Status kecamatan** dari prediksi hotspot 7 hari ke depan: **Waspada** ≥ {fmt(BATAS[1], 1)}, "
+            f"**Siaga** ≥ {fmt(BATAS[2], 0)}, **Awas** ≥ {fmt(BATAS[3], 0)} hotspot/7 hari. Pada data evaluasi 2015–2026, "
+            f"kecamatan-hari Waspada {_pct('Waspada', 'p1')} benar ada hotspot; Siaga {_pct('Siaga', 'p5')} benar ≥ 5 hotspot; "
+            f"Awas {_pct('Awas', 'p20')} benar ≥ 20 hotspot (Normal: {_pct('Normal', 'p1')} ada hotspot).\n"
             "- **Aktual vs prediksi**: tiap titik = tanggal asal prediksi, nilainya total hotspot 7 hari sesudahnya.\n"
             "- Model memprediksi rata-rata bersyarat (Tweedie): cenderung **meremehkan puncak** di tahun api besar "
             "dan melebihkan di tahun tenang.\n"
             "- Hotspot di luar 7 hari pertama adalah skenario klimatologis (tanpa cuaca masa depan).\n"
             "- Data hotspot hanya baris positif; hari tanpa hotspot dianggap 0.")
-    with f8:
+    with f9:
         fullscreen_btn()
 
 rng = st.session_state["f_rng"]
@@ -356,9 +432,10 @@ def total_in(s, e, ids):
     return float(period_slice(combined, s, e, ids)["v"].sum())
 
 
-def style_fig(fig, h, legend=True):
+def style_fig(fig, h=None, legend=True):
+    """h=None: tinggi grafik mengikuti CSS kartu (tata letak satu layar)."""
     fig.update_layout(
-        height=h, margin=dict(l=8, r=8, t=26 if legend else 6, b=6), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", separators=",.",
+        height=h, autosize=True, margin=dict(l=8, r=8, t=26 if legend else 6, b=6), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", separators=",.",
         font=dict(family=FONT, size=11, color=INK2), hovermode="x unified",
         hoverlabel=dict(bgcolor="white", font=dict(family=FONT, size=11, color=INK)),
         legend=dict(orientation="h", y=1.12, x=0, bgcolor="rgba(0,0,0,0)", font=dict(size=11)) if legend else dict(visible=False))
@@ -373,13 +450,7 @@ PLOT = dict(width="stretch", config=CFG, theme=None)
 # ----------------------------------------------------------------------------------
 # KPI
 # ----------------------------------------------------------------------------------
-sec_l, sec_r = st.columns([3, 1.6], vertical_alignment="center")
-sec_l.markdown(f'<div class="sec">Performa model dan ringkasan <span>{esc(region_name)} · {tgl(start)} – {tgl(end)}</span></div>',
-               unsafe_allow_html=True)
-with sec_r.container(key="head_sec"):
-    st.session_state.setdefault("f_split", "Holdout 2026")
-    split_pick = st.segmented_control("Evaluasi", ["Holdout 2026", "Walk-forward 2015–25"],
-                                      key="f_split", label_visibility="collapsed") or "Holdout 2026"
+split_pick = st.session_state["f_split"]
 split_key = "holdout" if split_pick.startswith("Holdout") else "walk-forward"
 mt = load_metrik()
 mm = mt[(mt["split"] == split_key) & (mt["model"] == "Model")].iloc[0]
@@ -401,9 +472,10 @@ if tot_prev > 0:
     prev_chip = f'<span class="chip {kind}">{arrow}{fmt(chg, 1)}%</span>vs periode sebelumnya'
 else:
     prev_chip = '<span class="chip flat">–</span>periode sebelumnya tanpa hotspot'
-sg = load_siaga()
 sg_sel = sg[sg["district_id"].isin(sel_ids)]
-n_siaga = int((sg_sel["status"] == "Siaga").sum())
+n_lv = sg_sel["status"].value_counts().reindex(STATUS, fill_value=0)
+n_siaga = int(n_lv["Siaga"] + n_lv["Awas"])
+lv_txt = " · ".join(f'<span style="color:{S_COL[k][1]};font-weight:700">{k} {int(n_lv[k])}</span>' for k in ("Awas", "Siaga", "Waspada"))
 pred_note = f"termasuk {n_fc_days} hari prediksi · " if n_fc_days else ""
 st.markdown(
     '<div class="kpis">'
@@ -413,8 +485,8 @@ st.markdown(
     + model_card("MAE", "MAE", "mae", "hotspot per 7 hari")
     + f'<div class="kpi key hot"><div class="l">Total hotspot periode</div><div class="v">{fmt(tot_now, 1 if n_fc_days else 0)}</div>'
       f'<div class="s">{pred_note}{prev_chip}</div></div>'
-    + f'<div class="kpi"><div class="l">{tip("Kecamatan Siaga", "Siaga")}</div><div class="v">{n_siaga} <small style="font-size:13px;color:{INK2}">dari {len(sg_sel)}</small></div>'
-      f'<div class="s">prediksi 7 hari ke depan</div></div>'
+    + f'<div class="kpi"><div class="l">{tip("Kecamatan Siaga + Awas", "Siaga")}</div><div class="v">{n_siaga} <small style="font-size:13px;color:{INK2}">dari {len(sg_sel)}</small></div>'
+      f'<div class="s">{lv_txt}</div></div>'
     + "</div>", unsafe_allow_html=True)
 
 
@@ -466,9 +538,8 @@ def f12(did):
 
 
 # ----------------------------------------------------------------------------------
-# Tata letak utama: 3 baris, tiap baris dua kartu dengan tinggi sama (sisi bawah rata)
+# Label fitur, kelompok, dan warna kartu
 # ----------------------------------------------------------------------------------
-WL, WR = 1.45, 1
 LABEL = {
     "days_since_hotspot": "Hari sejak hotspot terakhir", "prov_sum_7d": "Hotspot provinsi, 7 hari",
     "prov_sum_30d": "Hotspot provinsi, 30 hari", "prov_sum_90d": "Hotspot provinsi, 90 hari",
@@ -497,12 +568,31 @@ def grup(n):
 G_COL = {"Riwayat hotspot": NAVY, "Agregat spasial": BLUE, "Cuaca/iklim": TEAL, "Kalender": ORANGE, "Lokasi": "#9db4cc"}
 MSG = 'style="padding:14px 12px"'
 
-# ======================= BARIS 1: historis+forecast | peta =======================
-c1, c2 = st.columns([WL, WR], gap="small")
+def ins(html_txt):
+    """Baris info satu baris; teks lengkap muncul sebagai tooltip bila terpotong."""
+    plain = html.escape(re.sub(r"<[^>]+>", "", html_txt), quote=True)
+    st.markdown(f'<div class="ins" title="{plain}">{html_txt}</div>', unsafe_allow_html=True)
+
+
+def note(txt):
+    st.markdown(f'<div class="note cn" title="{html.escape(txt, quote=True)}">{txt}</div>', unsafe_allow_html=True)
+
+
+def chip(lv):
+    bg, fg = S_COL[lv]
+    return f'<span class="st" style="background:{bg};color:{fg}">{lv}</span>'
+
+
+# Tata letak satu layar: 2 baris x 3 kartu. Baris 1: historis+forecast | peta | status 7 hari. Baris 2: aktual vs prediksi | ERA5 | fitur.
+WC = [1.35, 1.1, .9]
+
+# ======================= BARIS 1 =======================
+c1, c2, c3 = st.columns(WC, gap="small")
 with c1.container(key="card_ts"):
     with st.container(key="head_ts"):
-        h1, h2 = st.columns([2.0, 1.7], vertical_alignment="center")
-        h1.markdown(f'<div class="ct">Hotspot historis dan forecast <span>{esc(region_name)}</span></div>', unsafe_allow_html=True)
+        h1, h2 = st.columns([1.7, 1.5], vertical_alignment="center")
+        h1.markdown(f'<div class="ct" title="{esc(region_name)} · {tgl(start)} – {tgl(end)}">Hotspot historis dan forecast '
+                    f'<span>{esc(region_name)} · {tgl(start)} – {tgl(end)}</span></div>', unsafe_allow_html=True)
         st.session_state.setdefault("agg_h", "Otomatis")
         agg_h = h2.segmented_control("Agregasi", ["Otomatis", "Harian", "Mingguan", "Bulanan"],
                                      key="agg_h", label_visibility="collapsed") or "Otomatis"
@@ -528,7 +618,7 @@ with c1.container(key="card_ts"):
             parts.append(f"Aktual: <b>{fmt(float(act_s.sum()))}</b> hotspot")
         if len(fc_s):
             parts.append(f"Prediksi: <b>{fmt(float(fc_s.sum()))}</b> hotspot")
-        st.markdown(f'<div class="ins">{" · ".join(parts)} · satuan {unit}</div>', unsafe_allow_html=True)
+        ins(f'{" · ".join(parts)} · satuan {unit}')
         fig = go.Figure()
         if len(fc_s):
             fig.add_vrect(x0=LAST_OBS if len(act_s) else fc_s.index[0], x1=fc_s.index[-1], fillcolor=TEAL, opacity=0.07, line_width=0)
@@ -542,29 +632,33 @@ with c1.container(key="card_ts"):
         if start <= LAST_OBS <= end and len(fc_s):
             fig.add_annotation(x=LAST_OBS, y=1.0, yref="paper", text="origin forecast →", showarrow=False, xanchor="right",
                                yanchor="bottom", font=dict(size=10, color=TEAL))
-        style_fig(fig, 430)
-        st.plotly_chart(fig, **PLOT)
-        st.markdown('<div class="note">Garis putus-putus = prediksi model. Di luar 7 hari pertama model tidak mengenal cuaca masa depan, '
-                    'jadi kurva bersifat skenario klimatologis; andalkan tren mingguan/bulanan.</div>', unsafe_allow_html=True)
+        style_fig(fig)
+        st.plotly_chart(fig, key="c1_ts", **PLOT)
+        note("Garis putus-putus = prediksi model. Di luar 7 hari pertama model tidak mengenal cuaca masa depan, "
+             "jadi kurva bersifat skenario klimatologis; andalkan tren mingguan/bulanan.")
 
 with c2.container(key="card_map"):
     with st.container(key="head_map"):
-        m1_, m2_ = st.columns([1.5, 1.5], vertical_alignment="center")
-        m1_.markdown('<div class="ct">Peta sebaran hotspot <span>total pada periode</span></div>', unsafe_allow_html=True)
+        m1_, m2_ = st.columns([1.5, 1.1], vertical_alignment="center")
+        m1_.markdown('<div class="ct">Peta sebaran hotspot <span>total periode</span></div>', unsafe_allow_html=True)
         st.session_state.setdefault("basemap", "Polos")
-        bm = m2_.segmented_control("Peta dasar", ["Polos", "OpenStreetMap", "Carto"], key="basemap",
-                                   label_visibility="collapsed") or "Polos"
+        bm = m2_.segmented_control("Peta dasar", ["Polos", "OpenStreetMap", "Carto"], key="basemap", label_visibility="collapsed",
+                                   format_func=lambda k: "OSM" if k == "OpenStreetMap" else k) or "Polos"
     BASEMAP = {"Polos": "white-bg", "OpenStreetMap": "open-street-map", "Carto": "carto-positron"}[bm]
     ids_list = [i for i in meta["district_id"] if i in ids_data]
     tot_vals = np.array([float(stats["total"].get(i, 0.0)) for i in ids_list])
     zmax = float(np.log1p(np.quantile(tot_vals, 0.98))) if tot_vals.max() > 0 else 1.0
     zmax = max(zmax, 1e-6)
+    sg_i = sg.set_index("district_id")
+    st_map = sg_i["status"]
     hover = []
     for i, tv in zip(ids_list, tot_vals):
         r = info.loc[i]
+        lv = st_map.get(i)
         hover.append(f"<b>{esc(r['kecamatan'])}</b><br>{esc(r['kabupaten'])}, {esc(r['provinsi'])}<br>"
                      f"Total hotspot: <b>{fmt(tv, dec)}</b><br>Rata-rata/hari: <b>{fmt(tv / n_days_p, 2)}</b><br>"
-                     f"Perubahan awal→akhir: {change_text(*f12(i))}")
+                     f"Perubahan awal→akhir: {change_text(*f12(i))}"
+                     + (f"<br>Status 7 hari ke depan: <b>{lv}</b>" if isinstance(lv, str) else ""))
     no_data = [i for i in meta["district_id"] if i not in ids_data]
     gj = load_geojson()
     tick_cand = [t for t in [0, 1, 10, 100, 1000, 10000] if np.log1p(t) <= zmax * 1.001]
@@ -606,8 +700,8 @@ with c2.container(key="card_map"):
     w_, e_, s_, n_ = bbox(sel_ids if not is_all_region else meta["district_id"])
     px_, py_ = (e_ - w_) * 0.05 + 0.02, (n_ - s_) * 0.05 + 0.02
     fig.update_layout(map=dict(style=BASEMAP, bounds=dict(west=w_ - px_, east=e_ + px_, south=s_ - py_, north=n_ + py_)),
-                      height=412, margin=dict(l=0, r=0, t=0, b=0), clickmode="event+select", paper_bgcolor="rgba(0,0,0,0)", separators=",.",
-                      font=dict(family=FONT, color=INK2))
+                      autosize=True, margin=dict(l=0, r=0, t=0, b=0), clickmode="event+select", paper_bgcolor="rgba(0,0,0,0)",
+                      separators=",.", font=dict(family=FONT, color=INK2))
     ev = st.plotly_chart(fig, on_select="rerun", selection_mode="points", key="peta", width="stretch", theme=None,
                          config=dict(displaylogo=False, displayModeBar=False, scrollZoom=True))
     picked_id = None
@@ -620,10 +714,12 @@ with c2.container(key="card_map"):
     if picked_id in info.index and picked_id in ids_data:
         r = info.loc[picked_id]
         tv = float(stats["total"].get(picked_id, 0.0))
+        lv = st_map.get(picked_id)
         cells = [("Kecamatan", esc(r["kecamatan"]), f"{esc(r['kabupaten'])}, {esc(PROV_SHORT.get(r['provinsi'], r['provinsi']))}"),
                  ("Total hotspot", fmt(tv, dec), f"{tgl(start)} – {tgl(end)}"),
-                 ("Rata-rata per hari", fmt(tv / n_days_p, 2), "total ÷ jumlah hari"),
-                 ("Perubahan", change_text(*f12(picked_id)), "paruh akhir vs paruh awal")]
+                 ("Perubahan", change_text(*f12(picked_id)), "paruh akhir vs awal"),
+                 ("Status 7 hari", chip(lv) if isinstance(lv, str) else "–",
+                  f"prediksi {fmt(float(sg_i.loc[picked_id, 'pred_hotspot_7d']), 1)} hotspot" if isinstance(lv, str) else "tanpa forecast")]
     else:
         sub = stats.reindex(sel_ids).fillna(0.0)
         tot_r = float(sub["total"].sum())
@@ -637,9 +733,36 @@ with c2.container(key="card_map"):
         f'<div class="sum"><div class="l">{l}</div><div class="v">{v}</div><div class="s">{s_}</div></div>' for l, v, s_ in cells) + "</div>",
         unsafe_allow_html=True)
 
-# ======================= BARIS 2: aktual vs prediksi | ERA5 =======================
-c3, c4 = st.columns([WL, WR], gap="small")
-with c3.container(key="card_avp"):
+with c3.container(key="card_siaga"):
+    w_s, w_e = pd.Timestamp(sg["window_start"].iloc[0]), pd.Timestamp(sg["window_end"].iloc[0])
+    with st.container(key="head_siaga"):
+        st.markdown(f'<div class="ct" title="Prediksi {tgl(w_s)} – {tgl(w_e)}">Status kecamatan 7 hari ke depan '
+                    f'<span>{tgl(w_s)} – {tgl(w_e)}</span></div>', unsafe_allow_html=True)
+    sg_show = sg_sel[sg_sel["status"] != "Normal"].sort_values("pred_hotspot_7d", ascending=False)
+    ins(f'<b>{len(sg_show)}</b> dari {len(sg_sel)} kecamatan Waspada ke atas · {esc(region_name)}')
+    st.markdown('<div class="slv">' + "".join(
+        f'<span title="{k}: prediksi ≥ {fmt(BATAS[i], 1)} hotspot/7 hari">{chip(k)} {int(n_lv[k])}</span>'
+        for i, k in enumerate(STATUS) if k != "Normal")
+        + f'<span style="margin-left:auto" title="Batas tingkat, hotspot per 7 hari">≥{fmt(BATAS[1], 1)} · ≥{fmt(BATAS[2], 0)} · ≥{fmt(BATAS[3], 0)}</span></div>',
+        unsafe_allow_html=True)
+    if sg_show.empty:
+        st.markdown(f'<div class="note" {MSG}>Tidak ada kecamatan berstatus Waspada, Siaga, atau Awas di wilayah ini.</div>',
+                    unsafe_allow_html=True)
+    else:
+        vmax = float(sg["pred_hotspot_7d"].max())
+        rows = "".join(
+            f"<tr><td>{int(r.peringkat)}</td><td title='{esc(r.kecamatan)}, {esc(r.provinsi)}'>{esc(r.kecamatan)}</td><td>{chip(r.status)}</td>"
+            f"<td><span class='bar' style='width:{max(2, int(r.pred_hotspot_7d / vmax * 22))}px'></span>{fmt(r.pred_hotspot_7d, 1)}</td>"
+            f"<td>{fmt(r.aktual_7h_terakhir, 0)}</td></tr>" for r in sg_show.itertuples())
+        st.markdown(
+            '<div class="tbw"><table class="ev"><colgroup><col style="width:36px"><col><col style="width:76px"><col style="width:74px">'
+            '<col style="width:50px"></colgroup><thead><tr><th title="Peringkat se-Kalimantan">#</th><th>Kecamatan</th><th>Status</th>'
+            '<th title="Prediksi hotspot 7 hari ke depan">Prediksi</th><th title="Hotspot aktual 7 hari terakhir">Aktual</th></tr></thead>'
+            f'<tbody>{rows}</tbody></table></div>', unsafe_allow_html=True)
+
+# ======================= BARIS 2 =======================
+c4, c5, c6 = st.columns(WC, gap="small")
+with c4.container(key="card_avp"):
     with st.container(key="head_avp"):
         st.markdown(f'<div class="ct">Aktual vs prediksi model <span>hotspot 7 hari ke depan · {esc(region_name)}</span></div>',
                     unsafe_allow_html=True)
@@ -658,10 +781,9 @@ with c3.container(key="card_avp"):
             one = len(sel_ids) == 1
             mean_a, mean_p = float(g["actual_7d"].mean()), float(g["pred_final"].mean())
             bias = (mean_p - mean_a) / mean_a * 100 if mean_a > 0 else np.nan
-            st.markdown(
-                f'<div class="ins">Rata-rata aktual <b>{fmt(mean_a, 2)}</b> · prediksi <b>{fmt(mean_p, 2)}</b> '
+            ins(f'Rata-rata aktual <b>{fmt(mean_a, 2)}</b> · prediksi <b>{fmt(mean_p, 2)}</b> '
                 f'{"per hari" if one else "per kecamatan-hari"} · bias <b>{fmt(bias, 1) + "%" if not np.isnan(bias) else "–"}</b> '
-                f'(negatif = meremehkan)</div>', unsafe_allow_html=True)
+                f'(negatif = meremehkan)')
             span_v = (v_e - v_s).days + 1
             rv = None if span_v <= 150 else ("W" if span_v <= 900 else "MS")
             gg = g.resample(rv).mean() if rv else g
@@ -672,16 +794,17 @@ with c3.container(key="card_avp"):
                 fig.add_vrect(x0="2026-01-01", x1=v_e, fillcolor=ORANGE, opacity=0.06, line_width=0)
                 fig.add_annotation(x="2026-01-01", y=1.0, yref="paper", text="holdout murni →", showarrow=False, xanchor="left",
                                    yanchor="bottom", font=dict(size=10, color=ORANGE))
-            style_fig(fig, 268)
-            st.plotly_chart(fig, **PLOT)
-            st.markdown(f'<div class="note">Titik = tanggal asal prediksi. Evaluasi {tgl(AV_S)} – {tgl(AV_E)}; '
-                        'mulai 1 Jan 2026 holdout murni, sebelumnya walk-forward.</div>', unsafe_allow_html=True)
+            style_fig(fig)
+            st.plotly_chart(fig, key="c1_avp", **PLOT)
+            note(f"Titik = tanggal asal prediksi. Evaluasi {tgl(AV_S)} – {tgl(AV_E)}; mulai 1 Jan 2026 holdout murni, sebelumnya walk-forward.")
 
-with c4.container(key="card_era"):
+with c5.container(key="card_era"):
     with st.container(key="head_era"):
-        st.markdown(f'<div class="ct">Variabel iklim ERA5 <span>rata-rata {esc(region_name)}</span></div>', unsafe_allow_html=True)
+        e1, e2 = st.columns([1, 1.6], vertical_alignment="center")
+        e1.markdown(f'<div class="ct" title="Rata-rata {esc(region_name)}">Iklim ERA5 <span>{esc(region_name)}</span></div>',
+                    unsafe_allow_html=True)
         st.session_state.setdefault("era_var", "rain_mm")
-        var = st.segmented_control("Variabel iklim", list(ERA5_VARS), key="era_var",
+        var = e2.segmented_control("Variabel iklim", list(ERA5_VARS), key="era_var",
                                    format_func=lambda k: ERA5_VARS[k][2], label_visibility="collapsed") or "rain_mm"
     vname, vcol, _vshort, vunit = ERA5_VARS[var]
     e_start, e_end = max(start, pd.Timestamp("2000-11-01")), min(end, ERA5_END)
@@ -698,10 +821,9 @@ with c4.container(key="card_era"):
                 st.markdown(f'<div class="note" {MSG}>Tidak ada data untuk variabel ini.</div>', unsafe_allow_html=True)
             else:
                 dp = 3 if var == "swvl1" else 2
-                st.markdown(
-                    f'<div class="ins"><b>{vname}</b> ({vunit}) · rata-rata <b>{fmt(float(ser.mean()), dp)}</b> · '
-                    f'tertinggi <b>{fmt(float(ser.max()), dp)}</b> ({tgl(ser.idxmax())}) · '
-                    f'terendah <b>{fmt(float(ser.min()), dp)}</b> ({tgl(ser.idxmin())})</div>', unsafe_allow_html=True)
+                ins(f'<b>{vname}</b> ({vunit}) · rata-rata <b>{fmt(float(ser.mean()), dp)}</b> · '
+                    f'maks <b>{fmt(float(ser.max()), dp)}</b> ({tgl(ser.idxmax())}) · '
+                    f'min <b>{fmt(float(ser.min()), dp)}</b> ({tgl(ser.idxmin())})')
                 nd = (e_end - e_start).days + 1
                 rule = None if nd <= 200 else ("W" if nd <= 1100 else "MS")
                 plot_s = ser.resample(rule).mean() if rule else ser
@@ -709,57 +831,33 @@ with c4.container(key="card_era"):
                     x=plot_s.index, y=plot_s.values, mode="lines", name=vname, line=dict(color=vcol, width=1.8),
                     fill="tozeroy" if var == "rain_mm" else None, fillcolor="rgba(31,111,181,0.12)" if var == "rain_mm" else None,
                     hovertemplate="%{y:." + str(dp) + "f} " + vunit + "<extra></extra>"))
-                style_fig(fig, 250, legend=False)
+                style_fig(fig, legend=False)
                 fig.update_yaxes(title=dict(text=vunit, font=dict(size=10, color=INK2)))
-                st.plotly_chart(fig, **PLOT)
+                st.plotly_chart(fig, key="c1_era", **PLOT)
                 agg_txt = "harian" if not rule else ("mingguan" if rule == "W" else "bulanan")
-                st.markdown(f'<div class="note">Rata-rata {agg_txt}, seluruh kecamatan terpilih. Pilih variabel di atas.</div>',
-                            unsafe_allow_html=True)
+                note(f"Rata-rata {agg_txt}, seluruh kecamatan terpilih. ERA5 tersedia s.d. {tgl(ERA5_END)}.")
 
-# ======================= BARIS 3: feature importance | Siaga =======================
-c5, c6 = st.columns([WL, WR], gap="small")
-with c5.container(key="card_fi"):
+with c6.container(key="card_fi"):
     with st.container(key="head_fi"):
-        st.markdown('<div class="ct">Fitur terpenting, top 20 <span>kontribusi gain (%) · geser untuk melihat semua</span></div>',
-                    unsafe_allow_html=True)
+        st.markdown('<div class="ct" title="Kontribusi gain (%), geser untuk melihat semua">Fitur terpenting, top 20 '
+                    '<span>gain (%) · geser</span></div>', unsafe_allow_html=True)
     fi = load_fitur().sort_values("gain_persen", ascending=False).head(20).copy()
     fi["Fitur"] = fi["fitur"].map(lambda n: LABEL.get(n, n))
     fi["Kelompok"] = fi["fitur"].map(grup)
     used = [g_ for g_ in G_COL if g_ in set(fi["Kelompok"])]
     st.markdown('<div class="fleg">' + "".join(f'<span><i style="background:{G_COL[g_]}"></i>{g_}</span>' for g_ in used) + "</div>",
                 unsafe_allow_html=True)
-    with st.container(height=300, border=False, key="fi_scroll"):
+    with st.container(height=200, border=False, key="fi_scroll"):
         fig = go.Figure(go.Bar(
             x=fi["gain_persen"], y=fi["Fitur"], orientation="h", marker_color=[G_COL[k] for k in fi["Kelompok"]],
             text=[fmt(v, 1) for v in fi["gain_persen"]], textposition="outside", cliponaxis=False, customdata=fi[["fitur", "Kelompok"]],
             hovertemplate="<b>%{y}</b><br>Gain: %{x:.2f}%<br>%{customdata[1]} · %{customdata[0]}<extra></extra>"))
-        fig.update_yaxes(autorange="reversed", automargin=True, title=None, tickfont=dict(size=11, color=INK))
+        fig.update_yaxes(autorange="reversed", automargin=True, title=None, tickfont=dict(size=10.5, color=INK))
         fig.update_xaxes(showgrid=True, gridcolor=GRID, title=None, showticklabels=False, zeroline=False)
-        style_fig(fig, 20 * 27 + 20, legend=False)
+        style_fig(fig, 20 * 22 + 12, legend=False)
         fig.update_layout(hovermode="closest", margin=dict(l=8, r=36, t=4, b=4), bargap=0.3)
         st.plotly_chart(fig, **PLOT)
 
-with c6.container(key="card_siaga"):
-    w_s, w_e = pd.Timestamp(sg["window_start"].iloc[0]), pd.Timestamp(sg["window_end"].iloc[0])
-    thr = float(sg["ambang_siaga"].iloc[0])
-    with st.container(key="head_siaga"):
-        st.markdown(f'<div class="ct">Peringkat kecamatan Siaga <span>{tgl(w_s)} – {tgl(w_e)}</span></div>', unsafe_allow_html=True)
-    sg_show = sg_sel[sg_sel["status"] == "Siaga"].sort_values("peringkat")
-    st.markdown(f'<div class="ins">Ambang Siaga ≥ <b>{fmt(thr, 2)}</b> hotspot/7 hari · <b>{len(sg_show)}</b> dari {len(sg_sel)} '
-                'kecamatan di wilayah terpilih</div>', unsafe_allow_html=True)
-    if sg_show.empty:
-        st.markdown(f'<div class="note" {MSG}>Tidak ada kecamatan berstatus Siaga di wilayah ini.</div>', unsafe_allow_html=True)
-    else:
-        vmax = float(sg["pred_hotspot_7d"].max())
-        rows = "".join(
-            f"<tr><td>{int(r.peringkat)}</td><td>{esc(r.kecamatan)}</td>"
-            f"<td><span class='bar' style='width:{max(2, int(r.pred_hotspot_7d / vmax * 34))}px'></span>{fmt(r.pred_hotspot_7d, 1)}</td>"
-            f"<td>{fmt(r.aktual_7h_terakhir, 0)}</td></tr>" for r in sg_show.itertuples())
-        st.markdown(
-            '<div class="tbw" style="margin-top:4px"><table class="ev"><thead><tr><th>#</th><th>Kecamatan</th>'
-            f'<th>Prediksi 7h</th><th>Aktual 7h</th></tr></thead><tbody>{rows}</tbody></table></div>', unsafe_allow_html=True)
-
-# ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 # Footer
 # ----------------------------------------------------------------------------------
